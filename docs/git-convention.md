@@ -184,10 +184,3 @@ PR 올리기 전 스스로 확인할 것:
 [question] 여기서 트랜잭션 범위를 이렇게 잡은 이유가 있나요?
 ```
 
----
-
-## 참고 출처
-
-- [Conventional Commits](https://www.conventionalcommits.org)
-- [LINE 광고 서버팀 DevOps 문화](https://engineering.linecorp.com/ko/blog/line-ads-devops-culture)
-- [Git Branch Naming Conventions - Pull Panda](https://pullpanda.io/blog/git-branch-naming-conventions-best-practices)

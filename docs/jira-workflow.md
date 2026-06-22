@@ -202,12 +202,3 @@ SCRUM YYYY Sprint NN
 5. 리뷰 승인 + 머지 → 티켓 Done으로 변경
 ```
 
----
-
-## 참고 출처
-
-- [Atlassian Jira Workflow Guide](https://www.atlassian.com/software/jira/guides/workflows/overview)
-- [LINE 광고 서버팀 DevOps 문화](https://engineering.linecorp.com/ko/blog/line-ads-devops-culture)
-- [LINE Pay 스토리 포인트 운영](https://engineering.linecorp.com/ko/blog/user-story-point-in-line-pay-team)
-- [카카오 애자일 개발 문화](https://tech.kakao.com/posts/398)
-- [SK C&C Jira 워크플로우](https://engineering-skcc.github.io/devops-tools/jiraworkflow/)
