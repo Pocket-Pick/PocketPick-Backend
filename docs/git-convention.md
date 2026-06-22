@@ -7,27 +7,21 @@
 ## 1. 브랜치 전략
 
 ```
-main ← hotfix/ (main에서 분기 → main + develop 양쪽 머지)
-  ↑
-develop ← feat/, fix/, refactor/, chore/, docs/, test/, style/, ci/
-  ↑
-feat/SCRUM-번호-설명
+main ← feat/, fix/, hotfix/, refactor/, chore/, docs/, test/, style/, ci/
 ```
 
 | 브랜치 | 용도 | 머지 대상 |
 |--------|------|----------|
-| `main` | 프로덕션 배포본, 항상 배포 가능 상태 유지 | - |
-| `develop` | 통합 개발 브랜치, 다음 배포 준비 | `main` |
-| `feat/*` | 기능 개발 | `develop` |
-| `fix/*` | 버그 수정 | `develop` |
-| `hotfix/*` | 프로덕션 긴급 패치 | `main` + `develop` 양쪽 |
+| `main` | 항상 배포 가능 상태 유지 | - |
+| `feat/*` | 기능 개발 | `main` |
+| `fix/*` | 버그 수정 | `main` |
+| `hotfix/*` | 프로덕션 긴급 패치 | `main` |
 
-**hotfix 흐름**
+**흐름**
 ```
 main에서 분기
-  → hotfix/SCRUM-번호-설명 작업
-  → main으로 머지 (즉시 배포)
-  → develop으로도 머지 (누락 방지)
+  → feat/SCRUM-번호-설명 작업
+  → PR → main으로 머지
 ```
 
 ---
@@ -63,7 +57,7 @@ ci/SCRUM-90-github-actions-setup
 **원칙**
 - 티켓 번호 필수 → Jira 자동 연동
 - 설명은 소문자 + 하이픈, 최대 5단어
-- 작업 전 반드시 `develop` 최신화 후 분기
+- 작업 전 반드시 `main` 최신화 후 분기
 
 ---
 
