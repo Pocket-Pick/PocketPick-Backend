@@ -1,0 +1,3 @@
+rootProject.name = 'pocketpick'
+
+include 'services:auth'
