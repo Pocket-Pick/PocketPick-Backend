@@ -1,3 +1,4 @@
 rootProject.name = 'pocketpick'
 
 include 'services:auth'
+include 'services:user'
