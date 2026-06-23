@@ -2,6 +2,7 @@ package com.pocketpick.auth.service;
 
 import com.pocketpick.auth.domain.domain.exception.AccountNotFoundException;
 import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
+import com.pocketpick.auth.domain.domain.exception.InvalidTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
 import com.pocketpick.auth.domain.service.AuthService;
@@ -113,6 +114,40 @@ class AuthServiceTest {
             // then
             verify(tokenManager).deleteTokens(AccountFixture.USER_ID, accessToken);
             verify(cookieProvider).expireTokenCookies(response);
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰 재발급")
+    class Reissue {
+
+        @Test
+        @DisplayName("유효한 refresh token이면 새 토큰 쿠키를 설정한다")
+        void reissue_validRefreshToken_setsCookies() {
+            // given
+            String refreshToken = "validRefreshToken";
+            given(tokenManager.reissueTokens(refreshToken))
+                    .willReturn(new String[]{"newAccessToken", "newRefreshToken"});
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when
+            authService.reissue(refreshToken, response);
+
+            // then
+            verify(cookieProvider).addTokenCookies(response, "newAccessToken", "newRefreshToken");
+        }
+
+        @Test
+        @DisplayName("Redis에 없는 refresh token이면 InvalidTokenException을 던진다")
+        void reissue_invalidRefreshToken_throwsInvalidTokenException() {
+            // given
+            String refreshToken = "invalidRefreshToken";
+            given(tokenManager.reissueTokens(refreshToken)).willThrow(new InvalidTokenException());
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when & then
+            assertThatThrownBy(() -> authService.reissue(refreshToken, response))
+                    .isInstanceOf(InvalidTokenException.class);
         }
     }
 }

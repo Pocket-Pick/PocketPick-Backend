@@ -44,4 +44,10 @@ public class AuthService implements AuthUseCase {
         tokenManager.deleteTokens(userId, accessToken);
         cookieProvider.expireTokenCookies(response);
     }
+
+    @Override
+    public void reissue(String refreshToken, HttpServletResponse response) {
+        String[] tokens = tokenManager.reissueTokens(refreshToken);
+        cookieProvider.addTokenCookies(response, tokens[0], tokens[1]);
+    }
 }

@@ -6,4 +6,5 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthUseCase {
     void login(LoginRequest request, HttpServletResponse response);
     void logout(String accessToken, HttpServletResponse response);
+    void reissue(String refreshToken, HttpServletResponse response);
 }
