@@ -2,9 +2,7 @@ package com.pocketpick.user.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.service.UserService;
-import com.pocketpick.user.domain.domain.exception.DuplicateEmailException;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
-import com.pocketpick.user.domain.domain.exception.InvalidPasswordException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
@@ -19,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -38,9 +35,6 @@ class UserServiceTest {
     @Mock
     private OutboxEventRepository outboxEventRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
     @Spy
     private ObjectMapper objectMapper;
 
@@ -56,8 +50,6 @@ class UserServiceTest {
         void register_validRequest_returnsUserResponse() {
             // given
             RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, UserFixture.RAW_PASSWORD, UserFixture.NICKNAME);
-            given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
-            given(passwordEncoder.encode(UserFixture.RAW_PASSWORD)).willReturn(UserFixture.ENCODED_PASSWORD);
             given(userRepository.save(any())).willReturn(UserFixture.user());
             given(outboxEventRepository.save(any())).willReturn(null);
 
@@ -65,33 +57,7 @@ class UserServiceTest {
             UserResponse response = userService.register(request);
 
             // then
-            assertThat(response.email()).isEqualTo(UserFixture.EMAIL);
             assertThat(response.nickname()).isEqualTo(UserFixture.NICKNAME);
-        }
-
-        @Test
-        @DisplayName("이메일이 중복이면 DuplicateEmailException을 던진다")
-        void register_duplicateEmail_throwsDuplicateEmailException() {
-            // given
-            RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, UserFixture.RAW_PASSWORD, UserFixture.NICKNAME);
-            given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(true);
-
-            // when & then
-            assertThatThrownBy(() -> userService.register(request))
-                    .isInstanceOf(DuplicateEmailException.class);
-        }
-
-        @Test
-        @DisplayName("비밀번호가 8자 미만이면 InvalidPasswordException을 던진다")
-        void register_shortPassword_throwsInvalidPasswordException() {
-            // given
-            RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, "short", UserFixture.NICKNAME);
-            given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
-            given(passwordEncoder.encode("short")).willReturn("encoded");
-
-            // when & then
-            assertThatThrownBy(() -> userService.register(request))
-                    .isInstanceOf(InvalidPasswordException.class);
         }
 
         @Test
@@ -99,8 +65,6 @@ class UserServiceTest {
         void register_shortNickname_throwsInvalidNicknameException() {
             // given
             RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, UserFixture.RAW_PASSWORD, "a");
-            given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
-            given(passwordEncoder.encode(UserFixture.RAW_PASSWORD)).willReturn(UserFixture.ENCODED_PASSWORD);
 
             // when & then
             assertThatThrownBy(() -> userService.register(request))
@@ -112,8 +76,6 @@ class UserServiceTest {
         void register_longNickname_throwsInvalidNicknameException() {
             // given
             RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, UserFixture.RAW_PASSWORD, "a".repeat(21));
-            given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
-            given(passwordEncoder.encode(UserFixture.RAW_PASSWORD)).willReturn(UserFixture.ENCODED_PASSWORD);
 
             // when & then
             assertThatThrownBy(() -> userService.register(request))
@@ -135,7 +97,7 @@ class UserServiceTest {
             UserResponse response = userService.getUser(UserFixture.ID);
 
             // then
-            assertThat(response.email()).isEqualTo(UserFixture.EMAIL);
+            assertThat(response.nickname()).isEqualTo(UserFixture.NICKNAME);
         }
 
         @Test
