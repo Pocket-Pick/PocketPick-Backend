@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.controller.UserController;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.global.exception.GlobalExceptionHandler;
@@ -161,6 +162,56 @@ class UserControllerTest {
 
             // when & then
             mockMvc.perform(patch("/users/{id}", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /users/{id}/notification")
+    class UpdateNotification {
+
+        @Test
+        @DisplayName("정상 요청이면 200을 반환한다")
+        void updateNotification_validRequest_returns200() throws Exception {
+            // given
+            UpdateNotificationRequest request = new UpdateNotificationRequest(false);
+            UserResponse response = new UserResponse(UserFixture.ID, UserFixture.NICKNAME, null, null, false);
+            given(userUseCase.updateNotification(eq(UserFixture.ID), any())).willReturn(response);
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}/notification", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.notificationEnabled").value(false));
+        }
+
+        @Test
+        @DisplayName("notificationEnabled가 null이면 400을 반환한다")
+        void updateNotification_nullValue_returns400() throws Exception {
+            // given
+            String invalidBody = "{\"notificationEnabled\": null}";
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}/notification", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(invalidBody))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 404를 반환한다")
+        void updateNotification_notExistingId_returns404() throws Exception {
+            // given
+            UpdateNotificationRequest request = new UpdateNotificationRequest(false);
+            given(userUseCase.updateNotification(eq(UserFixture.ID), any())).willThrow(new UserNotFoundException());
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}/notification", UserFixture.ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())

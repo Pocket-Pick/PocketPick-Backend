@@ -7,6 +7,7 @@ import com.pocketpick.user.domain.domain.User;
 import com.pocketpick.user.domain.domain.UserProfile;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
@@ -71,6 +72,15 @@ public class UserService implements UserUseCase {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         user.updateProfile(new UserProfile(request.nickname(), request.profileImageUrl(), request.region()));
+        return UserResponse.from(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateNotification(Long userId, UpdateNotificationRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        user.updateNotification(request.notificationEnabled());
         return UserResponse.from(user);
     }
 }

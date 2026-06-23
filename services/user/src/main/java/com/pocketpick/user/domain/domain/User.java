@@ -31,4 +31,8 @@ public class User extends BaseEntity {
     public void updateProfile(UserProfile profile) {
         this.profile = profile;
     }
+
+    public void updateNotification(boolean notificationEnabled) {
+        this.notificationEnabled = notificationEnabled;
+    }
 }

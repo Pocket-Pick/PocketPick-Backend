@@ -5,6 +5,7 @@ import com.pocketpick.user.domain.service.UserService;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
@@ -157,6 +158,37 @@ class UserServiceTest {
 
             // when & then
             assertThatThrownBy(() -> userService.updateProfile(UserFixture.ID, request))
+                    .isInstanceOf(UserNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("알림 설정")
+    class UpdateNotification {
+
+        @Test
+        @DisplayName("정상 요청이면 알림 설정을 변경하고 응답을 반환한다")
+        void updateNotification_validRequest_returnsUpdatedUserResponse() {
+            // given
+            UpdateNotificationRequest request = new UpdateNotificationRequest(false);
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.of(UserFixture.user()));
+
+            // when
+            UserResponse response = userService.updateNotification(UserFixture.ID, request);
+
+            // then
+            assertThat(response.notificationEnabled()).isFalse();
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 UserNotFoundException을 던진다")
+        void updateNotification_notExistingId_throwsUserNotFoundException() {
+            // given
+            UpdateNotificationRequest request = new UpdateNotificationRequest(false);
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> userService.updateNotification(UserFixture.ID, request))
                     .isInstanceOf(UserNotFoundException.class);
         }
     }
