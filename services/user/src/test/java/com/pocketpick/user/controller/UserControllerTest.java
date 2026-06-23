@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.controller.UserController;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.global.exception.GlobalExceptionHandler;
 import com.pocketpick.user.domain.service.UserUseCase;
@@ -21,8 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -109,6 +112,57 @@ class UserControllerTest {
 
             // when & then
             mockMvc.perform(get("/users/{id}", UserFixture.ID))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /users/{id}")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("정상 요청이면 200을 반환한다")
+        void updateProfile_validRequest_returns200() throws Exception {
+            // given
+            UpdateProfileRequest request = new UpdateProfileRequest("새닉네임", null, "서울");
+            UserResponse response = new UserResponse(UserFixture.ID, "새닉네임", null, "서울", true);
+            given(userUseCase.updateProfile(eq(UserFixture.ID), any())).willReturn(response);
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.nickname").value("새닉네임"))
+                    .andExpect(jsonPath("$.region").value("서울"));
+        }
+
+        @Test
+        @DisplayName("닉네임이 비어있으면 400을 반환한다")
+        void updateProfile_blankNickname_returns400() throws Exception {
+            // given
+            String invalidBody = "{\"nickname\": \"\", \"profileImageUrl\": null, \"region\": null}";
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(invalidBody))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 404를 반환한다")
+        void updateProfile_notExistingId_returns404() throws Exception {
+            // given
+            UpdateProfileRequest request = new UpdateProfileRequest("새닉네임", null, null);
+            given(userUseCase.updateProfile(eq(UserFixture.ID), any())).willThrow(new UserNotFoundException());
+
+            // when & then
+            mockMvc.perform(patch("/users/{id}", UserFixture.ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
         }
