@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/auth")
@@ -38,11 +37,12 @@ public class AuthController {
         if (cookies == null) {
             throw new MissingTokenException();
         }
-        return Arrays.stream(cookies)
-                .filter(c -> name.equals(c.getName()))
-                .findFirst()
-                .map(Cookie::getValue)
-                .orElseThrow(MissingTokenException::new);
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        throw new MissingTokenException();
     }
 
 }
