@@ -30,4 +30,17 @@ public class AuthController {
         authUseCase.logout(accessToken, response);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<Void> reissue(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = Arrays.stream(request.getCookies())
+                .filter(c -> "refreshToken".equals(c.getName()))
+                .findFirst()
+                .map(c -> c.getValue())
+                .orElseThrow(() -> new IllegalArgumentException("refreshToken 쿠키가 없습니다."));
+
+        authUseCase.reissue(refreshToken, response);
+        return ResponseEntity.ok().build();
+    }
+
 }
