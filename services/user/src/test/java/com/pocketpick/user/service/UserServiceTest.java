@@ -8,6 +8,7 @@ import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
+import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
 import com.pocketpick.user.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,6 +35,9 @@ class UserServiceTest {
 
     @Mock
     private OutboxEventRepository outboxEventRepository;
+
+    @Mock
+    private AuthServiceClient authServiceClient;
 
     @Spy
     private ObjectMapper objectMapper;

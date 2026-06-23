@@ -12,9 +12,17 @@ public class AuthServiceClient {
 
     private final RestClient restClient;
 
+    public void validate(String email, String password) {
+        restClient.post()
+                .uri("/internal/accounts/validate")
+                .body(Map.of("email", email, "password", password))
+                .retrieve()
+                .toBodilessEntity();
+    }
+
     public void createCredentials(Long userId, String email, String password) {
         restClient.post()
-                .uri("/internal/credentials")
+                .uri("/internal/accounts/credentials")
                 .body(Map.of("userId", userId, "email", email, "password", password))
                 .retrieve()
                 .toBodilessEntity();
