@@ -11,6 +11,7 @@ import java.time.Duration;
 public class TokenManager {
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh:";
+    private static final String BLACKLIST_PREFIX = "blacklist:";
 
     private final JwtProvider jwtProvider;
     private final JwtProperties jwtProperties;
@@ -27,5 +28,14 @@ public class TokenManager {
         );
 
         return new String[]{accessToken, refreshToken};
+    }
+
+    public void deleteTokens(Long userId, String accessToken) {
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
+        redisTemplate.opsForValue().set(
+                BLACKLIST_PREFIX + accessToken,
+                "logout",
+                Duration.ofMillis(jwtProperties.getAccessExpiration())
+        );
     }
 }

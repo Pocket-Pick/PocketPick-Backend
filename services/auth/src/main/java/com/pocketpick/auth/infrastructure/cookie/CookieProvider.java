@@ -17,6 +17,19 @@ public class CookieProvider {
         addCookie(response, "refreshToken", refreshToken, (int) (jwtProperties.getRefreshExpiration() / 1000));
     }
 
+    public void expireTokenCookies(HttpServletResponse response) {
+        expireCookie(response, "accessToken");
+        expireCookie(response, "refreshToken");
+    }
+
+    private void expireCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
     private void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);

@@ -1,6 +1,5 @@
 package com.pocketpick.auth.infrastructure.jwt;
 
-import com.pocketpick.auth.infrastructure.jwt.JwtProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,15 @@ public class JwtProvider {
 
     public String createRefreshToken(Long userId) {
         return createToken(userId, jwtProperties.getRefreshExpiration());
+    }
+
+    public Long getUserId(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", Long.class);
     }
 
     private String createToken(Long userId, long expiration) {
