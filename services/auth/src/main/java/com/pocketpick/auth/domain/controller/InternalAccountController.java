@@ -1,6 +1,7 @@
 package com.pocketpick.auth.domain.controller;
 
 import com.pocketpick.auth.domain.dto.CreateCredentialsRequest;
+import com.pocketpick.auth.domain.dto.ValidateCredentialsRequest;
 import com.pocketpick.auth.domain.service.AccountUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +12,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/internal")
+@RequestMapping("/internal/accounts")
 @RequiredArgsConstructor
 public class InternalAccountController {
 
     private final AccountUseCase accountUseCase;
+
+    @PostMapping("/validate")
+    public ResponseEntity<Void> validate(@Valid @RequestBody ValidateCredentialsRequest request) {
+        accountUseCase.validate(request);
+        return ResponseEntity.ok().build();
+    }
 
     @PostMapping("/credentials")
     public ResponseEntity<Void> createCredentials(@Valid @RequestBody CreateCredentialsRequest request) {

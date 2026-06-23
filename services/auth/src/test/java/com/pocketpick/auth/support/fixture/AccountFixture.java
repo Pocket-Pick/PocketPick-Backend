@@ -10,6 +10,6 @@ public class AccountFixture {
     public static final String ENCODED_PASSWORD = "$2a$10$encodedPasswordForTest";
 
     public static Account account() {
-        return Account.create(EMAIL, RAW_PASSWORD, ENCODED_PASSWORD, USER_ID);
+        return Account.create(EMAIL, ENCODED_PASSWORD, USER_ID);
     }
 }
