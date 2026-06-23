@@ -10,6 +10,7 @@ import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
+import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +23,14 @@ public class UserService implements UserUseCase {
 
     private final UserRepository userRepository;
     private final OutboxEventRepository outboxEventRepository;
+    private final AuthServiceClient authServiceClient;
     private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
     public UserResponse register(RegisterRequest request) {
+        authServiceClient.validate(request.email(), request.password());
+
         User user = User.create(
                 new UserProfile(request.nickname(), null, null)
         );
