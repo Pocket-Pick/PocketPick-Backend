@@ -1,7 +1,9 @@
 package com.pocketpick.auth.domain.controller;
 
+import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.service.AuthUseCase;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,14 +28,21 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = Arrays.stream(request.getCookies())
-                .filter(c -> "accessToken".equals(c.getName()))
-                .findFirst()
-                .map(c -> c.getValue())
-                .orElseThrow(() -> new IllegalArgumentException("accessToken 쿠키가 없습니다."));
-
+        String accessToken = extractCookie(request, "accessToken");
         authUseCase.logout(accessToken, response);
         return ResponseEntity.ok().build();
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new MissingTokenException();
+        }
+        return Arrays.stream(cookies)
+                .filter(c -> name.equals(c.getName()))
+                .findFirst()
+                .map(Cookie::getValue)
+                .orElseThrow(MissingTokenException::new);
     }
 
 }
