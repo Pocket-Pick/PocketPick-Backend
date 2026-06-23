@@ -3,11 +3,14 @@ package com.pocketpick.auth.domain.service;
 import com.pocketpick.auth.domain.domain.Account;
 import com.pocketpick.auth.domain.domain.exception.AccountNotFoundException;
 import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
+import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
 import com.pocketpick.auth.infrastructure.cookie.CookieProvider;
 import com.pocketpick.auth.infrastructure.jwt.JwtProvider;
 import com.pocketpick.auth.infrastructure.jwt.TokenManager;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,15 +42,30 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-    public void logout(String accessToken, HttpServletResponse response) {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken = extractCookie(request, "accessToken");
         Long userId = jwtProvider.getUserId(accessToken);
         tokenManager.deleteTokens(userId, accessToken);
         cookieProvider.expireTokenCookies(response);
     }
 
     @Override
-    public void reissue(String refreshToken, HttpServletResponse response) {
+    public void reissue(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = extractCookie(request, "refreshToken");
         String[] tokens = tokenManager.reissueTokens(refreshToken);
         cookieProvider.addTokenCookies(response, tokens[0], tokens[1]);
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new MissingTokenException();
+        }
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        throw new MissingTokenException();
     }
 }

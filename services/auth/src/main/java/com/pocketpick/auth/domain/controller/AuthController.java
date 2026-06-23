@@ -1,9 +1,7 @@
 package com.pocketpick.auth.domain.controller;
 
-import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.service.AuthUseCase;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,29 +24,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = extractCookie(request, "accessToken");
-        authUseCase.logout(accessToken, response);
+        authUseCase.logout(request, response);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reissue")
     public ResponseEntity<Void> reissue(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = extractCookie(request, "refreshToken");
-        authUseCase.reissue(refreshToken, response);
+        authUseCase.reissue(request, response);
         return ResponseEntity.ok().build();
-    }
-
-    private String extractCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            throw new MissingTokenException();
-        }
-        for (Cookie cookie : cookies) {
-            if (name.equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        throw new MissingTokenException();
     }
 
 }
