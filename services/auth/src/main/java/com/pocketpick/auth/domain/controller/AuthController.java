@@ -1,8 +1,9 @@
 package com.pocketpick.auth.domain.controller;
 
+import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.service.AuthUseCase;
-import com.pocketpick.auth.infrastructure.cookie.CookieProvider;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthUseCase authUseCase;
-    private final CookieProvider cookieProvider;
 
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
@@ -26,21 +26,29 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = cookieProvider.extractCookie(request, "accessToken");
+        String accessToken = extractCookie(request, "accessToken");
         authUseCase.logout(accessToken, response);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reissue")
     public ResponseEntity<Void> reissue(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = Arrays.stream(request.getCookies())
-                .filter(c -> "refreshToken".equals(c.getName()))
-                .findFirst()
-                .map(c -> c.getValue())
-                .orElseThrow(() -> new IllegalArgumentException("refreshToken 쿠키가 없습니다."));
-
+        String refreshToken = extractCookie(request, "refreshToken");
         authUseCase.reissue(refreshToken, response);
         return ResponseEntity.ok().build();
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new MissingTokenException();
+        }
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        throw new MissingTokenException();
     }
 
 }
