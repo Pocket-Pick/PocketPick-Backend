@@ -6,6 +6,7 @@ import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
 import com.pocketpick.auth.domain.service.AuthService;
 import com.pocketpick.auth.infrastructure.cookie.CookieProvider;
+import com.pocketpick.auth.infrastructure.jwt.JwtProvider;
 import com.pocketpick.auth.infrastructure.jwt.TokenManager;
 import com.pocketpick.auth.support.fixture.AccountFixture;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @DisplayName("AuthService")
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +35,8 @@ class AuthServiceTest {
     private AccountRepository accountRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtProvider jwtProvider;
     @Mock
     private TokenManager tokenManager;
     @Mock
@@ -88,6 +92,27 @@ class AuthServiceTest {
             // when & then
             assertThatThrownBy(() -> authService.login(request, response))
                     .isInstanceOf(InvalidPasswordException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("로그아웃")
+    class Logout {
+
+        @Test
+        @DisplayName("정상 요청이면 토큰을 삭제하고 쿠키를 만료시킨다")
+        void logout_validToken_deletesTokensAndExpiresCookies() {
+            // given
+            String accessToken = "validAccessToken";
+            given(jwtProvider.getUserId(accessToken)).willReturn(AccountFixture.USER_ID);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when
+            authService.logout(accessToken, response);
+
+            // then
+            verify(tokenManager).deleteTokens(AccountFixture.USER_ID, accessToken);
+            verify(cookieProvider).expireTokenCookies(response);
         }
     }
 }
