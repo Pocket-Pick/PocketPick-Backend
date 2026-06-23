@@ -1,6 +1,7 @@
 package com.pocketpick.auth.domain.domain;
 
 import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
+import com.pocketpick.auth.domain.domain.exception.WeakPasswordException;
 import com.pocketpick.auth.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Table(name = "accounts")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account extends BaseEntity {
+
+    private static final int MIN_PASSWORD_LENGTH = 8;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +30,8 @@ public class Account extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
-    public static Account create(String email, String encodedPassword, Long userId) {
+    public static Account create(String email, String rawPassword, String encodedPassword, Long userId) {
+        validatePassword(rawPassword);
         Account account = new Account();
         account.email = email;
         account.password = encodedPassword;
@@ -38,6 +42,12 @@ public class Account extends BaseEntity {
     public void checkPassword(String rawPassword, PasswordEncoder encoder) {
         if (!encoder.matches(rawPassword, this.password)) {
             throw new InvalidPasswordException();
+        }
+    }
+
+    private static void validatePassword(String rawPassword) {
+        if (rawPassword == null || rawPassword.length() < MIN_PASSWORD_LENGTH) {
+            throw new WeakPasswordException();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.pocketpick.auth.domain.service;
 
 import com.pocketpick.auth.domain.domain.Account;
+import com.pocketpick.auth.domain.domain.exception.DuplicateEmailException;
 import com.pocketpick.auth.domain.dto.CreateCredentialsRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,11 @@ public class AccountService implements AccountUseCase {
     @Override
     @Transactional
     public void createCredentials(CreateCredentialsRequest request) {
+        if (accountRepository.existsByEmail(request.email())) {
+            throw new DuplicateEmailException();
+        }
         String encodedPassword = passwordEncoder.encode(request.password());
-        Account account = Account.create(request.email(), encodedPassword, request.userId());
+        Account account = Account.create(request.email(), request.password(), encodedPassword, request.userId());
         accountRepository.save(account);
     }
 }
