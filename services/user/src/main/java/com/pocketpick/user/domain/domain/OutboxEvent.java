@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "outbox_events")
+@Table(name = "outbox_events", indexes = {
+        @Index(name = "idx_outbox_events_published", columnList = "published")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OutboxEvent {
 
