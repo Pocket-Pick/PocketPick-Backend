@@ -5,6 +5,7 @@ import com.pocketpick.user.domain.service.UserService;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
@@ -112,6 +113,50 @@ class UserServiceTest {
 
             // when & then
             assertThatThrownBy(() -> userService.getUser(UserFixture.ID))
+                    .isInstanceOf(UserNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 수정")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("정상 요청이면 프로필을 수정하고 응답을 반환한다")
+        void updateProfile_validRequest_returnsUpdatedUserResponse() {
+            // given
+            UpdateProfileRequest request = new UpdateProfileRequest("새닉네임", null, "서울");
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.of(UserFixture.user()));
+
+            // when
+            UserResponse response = userService.updateProfile(UserFixture.ID, request);
+
+            // then
+            assertThat(response.nickname()).isEqualTo("새닉네임");
+            assertThat(response.region()).isEqualTo("서울");
+        }
+
+        @Test
+        @DisplayName("닉네임이 2자 미만이면 InvalidNicknameException을 던진다")
+        void updateProfile_shortNickname_throwsInvalidNicknameException() {
+            // given
+            UpdateProfileRequest request = new UpdateProfileRequest("a", null, null);
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.of(UserFixture.user()));
+
+            // when & then
+            assertThatThrownBy(() -> userService.updateProfile(UserFixture.ID, request))
+                    .isInstanceOf(InvalidNicknameException.class);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 UserNotFoundException을 던진다")
+        void updateProfile_notExistingId_throwsUserNotFoundException() {
+            // given
+            UpdateProfileRequest request = new UpdateProfileRequest("새닉네임", null, null);
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> userService.updateProfile(UserFixture.ID, request))
                     .isInstanceOf(UserNotFoundException.class);
         }
     }
