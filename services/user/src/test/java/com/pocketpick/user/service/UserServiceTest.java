@@ -1,5 +1,6 @@
 package com.pocketpick.user.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.service.UserService;
 import com.pocketpick.user.domain.domain.exception.DuplicateEmailException;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
@@ -7,6 +8,7 @@ import com.pocketpick.user.domain.domain.exception.InvalidPasswordException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
+import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -33,7 +36,13 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private OutboxEventRepository outboxEventRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Spy
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private UserService userService;
@@ -50,6 +59,7 @@ class UserServiceTest {
             given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
             given(passwordEncoder.encode(UserFixture.RAW_PASSWORD)).willReturn(UserFixture.ENCODED_PASSWORD);
             given(userRepository.save(any())).willReturn(UserFixture.user());
+            given(outboxEventRepository.save(any())).willReturn(null);
 
             // when
             UserResponse response = userService.register(request);
