@@ -23,7 +23,7 @@ public class OutboxEventPoller {
     private final AuthServiceClient authServiceClient;
     private final ObjectMapper objectMapper;
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     @Transactional
     public void poll() {
         List<OutboxEvent> events = outboxEventRepository.findByPublishedFalse();
