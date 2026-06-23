@@ -3,6 +3,7 @@ package com.pocketpick.card.domain.controller;
 import com.pocketpick.card.domain.domain.PokemonType;
 import com.pocketpick.card.domain.domain.Rarity;
 import com.pocketpick.card.domain.domain.Supertype;
+import com.pocketpick.card.domain.dto.CardDetailResponse;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.dto.CardSummaryResponse;
 import com.pocketpick.card.domain.dto.PageResponse;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +36,10 @@ public class CardController {
     ) {
         CardSearchRequest request = new CardSearchRequest(name, type, rarity, setId, supertype);
         return ResponseEntity.ok(PageResponse.from(cardUseCase.searchCards(request, pageable)));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CardDetailResponse> getCard(@PathVariable Long id) {
+        return ResponseEntity.ok(cardUseCase.getCard(id));
     }
 }

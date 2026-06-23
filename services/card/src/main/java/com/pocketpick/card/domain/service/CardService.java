@@ -1,5 +1,7 @@
 package com.pocketpick.card.domain.service;
 
+import com.pocketpick.card.domain.domain.exception.CardNotFoundException;
+import com.pocketpick.card.domain.dto.CardDetailResponse;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.dto.CardSummaryResponse;
 import com.pocketpick.card.domain.repository.CardRepository;
@@ -20,5 +22,13 @@ public class CardService implements CardUseCase {
     public Page<CardSummaryResponse> searchCards(CardSearchRequest request, Pageable pageable) {
         return cardRepository.search(request, pageable)
                 .map(CardSummaryResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CardDetailResponse getCard(Long cardId) {
+        return cardRepository.findById(cardId)
+                .map(CardDetailResponse::from)
+                .orElseThrow(CardNotFoundException::new);
     }
 }

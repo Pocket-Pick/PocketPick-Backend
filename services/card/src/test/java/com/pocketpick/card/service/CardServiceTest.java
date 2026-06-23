@@ -1,6 +1,8 @@
 package com.pocketpick.card.service;
 
 import com.pocketpick.card.domain.domain.PokemonType;
+import com.pocketpick.card.domain.domain.exception.CardNotFoundException;
+import com.pocketpick.card.domain.dto.CardDetailResponse;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.dto.CardSummaryResponse;
 import com.pocketpick.card.domain.repository.CardRepository;
@@ -19,8 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 @DisplayName("CardService")
@@ -103,6 +107,37 @@ class CardServiceTest {
             // then
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).name()).isEqualTo(CardFixture.NAME);
+        }
+    }
+
+    @Nested
+    @DisplayName("카드 상세 조회")
+    class GetCard {
+
+        @Test
+        @DisplayName("존재하는 id면 카드 상세 응답을 반환한다")
+        void getCard_existingId_returnsCardDetailResponse() {
+            // given
+            given(cardRepository.findById(CardFixture.ID)).willReturn(Optional.of(CardFixture.card()));
+
+            // when
+            CardDetailResponse response = cardService.getCard(CardFixture.ID);
+
+            // then
+            assertThat(response.id()).isEqualTo(CardFixture.ID);
+            assertThat(response.name()).isEqualTo(CardFixture.NAME);
+            assertThat(response.setId()).isEqualTo(CardFixture.SET_ID);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 CardNotFoundException을 던진다")
+        void getCard_notExistingId_throwsCardNotFoundException() {
+            // given
+            given(cardRepository.findById(CardFixture.ID)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> cardService.getCard(CardFixture.ID))
+                    .isInstanceOf(CardNotFoundException.class);
         }
     }
 }
