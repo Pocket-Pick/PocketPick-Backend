@@ -1,14 +1,13 @@
 package com.pocketpick.user.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.controller.UserController;
-import com.pocketpick.user.domain.domain.exception.DuplicateEmailException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.global.exception.GlobalExceptionHandler;
 import com.pocketpick.user.domain.service.UserUseCase;
 import com.pocketpick.user.support.fixture.UserFixture;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -58,7 +57,7 @@ class UserControllerTest {
         void register_validRequest_returns201() throws Exception {
             // given
             RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, "password123", UserFixture.NICKNAME);
-            UserResponse response = new UserResponse(UserFixture.ID, UserFixture.EMAIL, UserFixture.NICKNAME, null, null, true);
+            UserResponse response = new UserResponse(UserFixture.ID, UserFixture.NICKNAME, null, null, true);
             given(userUseCase.register(any())).willReturn(response);
 
             // when & then
@@ -66,23 +65,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.email").value(UserFixture.EMAIL))
                     .andExpect(jsonPath("$.nickname").value(UserFixture.NICKNAME));
-        }
-
-        @Test
-        @DisplayName("이메일 중복이면 409를 반환한다")
-        void register_duplicateEmail_returns409() throws Exception {
-            // given
-            RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, "password123", UserFixture.NICKNAME);
-            given(userUseCase.register(any())).willThrow(new DuplicateEmailException());
-
-            // when & then
-            mockMvc.perform(post("/users")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.errorCode").value("DUPLICATE_EMAIL"));
         }
 
         @Test
@@ -108,14 +91,14 @@ class UserControllerTest {
         @DisplayName("존재하는 id면 200을 반환한다")
         void getUser_existingId_returns200() throws Exception {
             // given
-            UserResponse response = new UserResponse(UserFixture.ID, UserFixture.EMAIL, UserFixture.NICKNAME, null, null, true);
+            UserResponse response = new UserResponse(UserFixture.ID, UserFixture.NICKNAME, null, null, true);
             given(userUseCase.getUser(UserFixture.ID)).willReturn(response);
 
             // when & then
             mockMvc.perform(get("/users/{id}", UserFixture.ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(UserFixture.ID))
-                    .andExpect(jsonPath("$.email").value(UserFixture.EMAIL));
+                    .andExpect(jsonPath("$.nickname").value(UserFixture.NICKNAME));
         }
 
         @Test

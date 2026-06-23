@@ -9,11 +9,10 @@ public class UserFixture {
     public static final Long ID = 1L;
     public static final String EMAIL = "test@pocketpick.com";
     public static final String RAW_PASSWORD = "password123";
-    public static final String ENCODED_PASSWORD = "$2a$10$encodedpasswordhash";
     public static final String NICKNAME = "테스트유저";
 
     public static User user() {
-        User user = User.create(EMAIL, RAW_PASSWORD, ENCODED_PASSWORD, new UserProfile(NICKNAME, null, null));
+        User user = User.create(new UserProfile(NICKNAME, null, null));
         ReflectionTestUtils.setField(user, "id", ID);
         return user;
     }

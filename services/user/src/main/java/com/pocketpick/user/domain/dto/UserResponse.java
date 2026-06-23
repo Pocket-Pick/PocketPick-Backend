@@ -4,7 +4,6 @@ import com.pocketpick.user.domain.domain.User;
 
 public record UserResponse(
         Long id,
-        String email,
         String nickname,
         String profileImageUrl,
         String region,
@@ -13,7 +12,6 @@ public record UserResponse(
     public static UserResponse from(User user) {
         return new UserResponse(
                 user.getId(),
-                user.getEmail(),
                 user.getProfile().getNickname(),
                 user.getProfile().getProfileImageUrl(),
                 user.getProfile().getRegion(),
