@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "sets")
@@ -34,7 +32,4 @@ public class CardSet {
     private String symbolImageUrl;
 
     private String logoImageUrl;
-
-    @OneToMany(mappedBy = "set", fetch = FetchType.LAZY)
-    private List<Card> cards = new ArrayList<>();
 }
