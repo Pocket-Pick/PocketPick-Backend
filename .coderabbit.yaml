@@ -1,0 +1,48 @@
+language: "ko-KR"
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_instructions:
+    - path: "**/*.java"
+      instructions: |
+        PocketPick 코딩 컨벤션을 엄격히 검사한다.
+
+        [필수 차단 항목 — blocking]
+        - @Autowired 필드 주입 사용 → 생성자 주입으로 변경 요구
+        - 엔티티(Entity)를 Controller/API 응답에 직접 반환 → DTO 변환 필수
+        - Optional.orElse(null) 사용 → orElseThrow() 사용 요구
+        - @Transactional을 Controller 또는 Repository 계층에 사용 → Service 계층에만 허용
+        - FetchType.EAGER 사용 → N+1 문제 경고 후 차단
+        - @ManyToOne, @OneToMany 등 JPA 연관관계 매핑 사용 → MSA 환경에서 ID 값 참조로 대체 요구
+        - application.yml 또는 properties 파일에 시크릿/비밀번호 하드코딩
+        - 트랜잭션 없이 여러 Repository에 순서 저장
+
+        [권고 항목 — suggestion]
+        - 현재 사용되지 않는 메서드/변수/필드가 있으면 제거 권고
+        - DTO 검증은 @NotNull, @NotBlank 수준에서 수행하고, 비즈니스 규칙 검증은 도메인 객체 안에서 수행
+        - Controller에 비즈니스 로직이 섞여 있으면 Service로 분리 권고
+        - SOLID 원칙 위반(특히 SRP, DIP) 여부 확인
+
+    - path: "**/test/**/*.java"
+      instructions: |
+        테스트 코드 검사 기준:
+        - 핵심 비즈니스 로직에 단위 테스트가 있는지 확인
+        - given/when/then 구조 또는 명확한 테스트 의도가 보이는지 확인
+        - 테스트 메서드명이 한글 또는 영문으로 의도를 표현하는지 확인
+
+    - path: "**/application*.yml"
+      instructions: |
+        - 시크릿, 비밀번호, API 키 하드코딩 여부를 반드시 확인한다.
+        - 환경변수 또는 외부 설정으로 분리되어 있는지 확인한다.
+
+chat:
+  auto_reply: true
