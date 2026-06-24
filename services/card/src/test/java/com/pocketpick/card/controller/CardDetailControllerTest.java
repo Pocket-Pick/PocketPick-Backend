@@ -59,7 +59,10 @@ class CardDetailControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(CardFixture.ID))
                     .andExpect(jsonPath("$.name").value(CardFixture.NAME))
-                    .andExpect(jsonPath("$.setId").value(CardFixture.SET_ID));
+                    .andExpect(jsonPath("$.setId").value(CardFixture.SET_ID))
+                    .andExpect(jsonPath("$.imageSmallUrl").value("https://images.pokemontcg.io/base1/4.png"))
+                    .andExpect(jsonPath("$.imageLargeUrl").value("https://images.pokemontcg.io/base1/4_hires.png"))
+                    .andExpect(jsonPath("$.types[0]").value("FIRE"));
         }
 
         @Test
