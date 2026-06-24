@@ -11,8 +11,7 @@ reviews:
     enabled: true
     drafts: false
     base_branches:
-      - main
-      - "feat/.*"
+      - ".*"
 
   path_instructions:
     - path: "**/*.java"
