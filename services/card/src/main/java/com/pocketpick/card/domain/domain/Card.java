@@ -19,9 +19,8 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "set_id", nullable = false)
-    private CardSet set;
+    @Column(nullable = false)
+    private String setId;
 
     @Column(nullable = false)
     private String number;
@@ -42,6 +41,6 @@ public class Card {
 
     private String imageLargeUrl;
 
-    @OneToMany(mappedBy = "card", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "card", fetch = FetchType.LAZY)
     private List<CardType> types = new ArrayList<>();
 }
