@@ -14,7 +14,6 @@ public record CardSummaryResponse(
         String subtype,
         Rarity rarity,
         String setId,
-        String setName,
         String number,
         String imageSmallUrl,
         List<PokemonType> types
@@ -26,8 +25,7 @@ public record CardSummaryResponse(
                 card.getSupertype(),
                 card.getSubtype(),
                 card.getRarity(),
-                card.getSet().getId(),
-                card.getSet().getName(),
+                card.getSetId(),
                 card.getNumber(),
                 card.getImageSmallUrl(),
                 card.getTypes().stream().map(t -> t.getType()).toList()
