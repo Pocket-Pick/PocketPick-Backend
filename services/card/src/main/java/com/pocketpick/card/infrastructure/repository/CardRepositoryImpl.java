@@ -2,7 +2,6 @@ package com.pocketpick.card.infrastructure.repository;
 
 import com.pocketpick.card.domain.domain.Card;
 import com.pocketpick.card.domain.domain.QCard;
-import com.pocketpick.card.domain.domain.QCardSet;
 import com.pocketpick.card.domain.domain.QCardType;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.repository.CardRepositoryCustom;
@@ -25,12 +24,10 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
     @Override
     public Page<Card> search(CardSearchRequest request, Pageable pageable) {
         QCard card = QCard.card;
-        QCardSet set = QCardSet.cardSet;
         QCardType cardType = QCardType.cardType;
 
         List<Card> content = queryFactory
                 .selectFrom(card)
-                .join(card.set, set).fetchJoin()
                 .leftJoin(card.types, cardType).fetchJoin()
                 .where(
                         nameContains(request.name()),
@@ -73,7 +70,7 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
     }
 
     private BooleanExpression setIdEq(String setId) {
-        return setId != null ? QCard.card.set.id.eq(setId) : null;
+        return setId != null ? QCard.card.setId.eq(setId) : null;
     }
 
     private BooleanExpression typeEq(CardSearchRequest request) {
