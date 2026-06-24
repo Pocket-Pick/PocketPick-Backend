@@ -23,7 +23,7 @@ CREATE TABLE cards (
     image_large_url  VARCHAR(500),
     PRIMARY KEY (id),
     UNIQUE KEY uq_set_number (set_id, number),
-    CONSTRAINT fk_card_set FOREIGN KEY (set_id) REFERENCES sets (id)
+    INDEX idx_card_set_id (set_id)
 );
 
 CREATE TABLE card_types (
@@ -31,5 +31,5 @@ CREATE TABLE card_types (
     card_id BIGINT      NOT NULL,
     type    VARCHAR(20) NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_card_type_card FOREIGN KEY (card_id) REFERENCES cards (id)
+    INDEX idx_card_type_card_id (card_id)
 );
