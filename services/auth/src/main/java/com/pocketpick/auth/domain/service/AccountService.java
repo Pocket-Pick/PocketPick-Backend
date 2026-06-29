@@ -32,6 +32,9 @@ public class AccountService implements AccountUseCase {
     @Override
     @Transactional
     public void createCredentials(CreateCredentialsRequest request) {
+        if (accountRepository.existsByEmail(request.email())) {
+            return;
+        }
         Account account = Account.create(request.email(), request.encodedPassword(), request.userId());
         accountRepository.save(account);
     }
