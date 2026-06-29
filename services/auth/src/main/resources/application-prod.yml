@@ -1,0 +1,3 @@
+cookie:
+  same-site: Strict
+  secure: true
