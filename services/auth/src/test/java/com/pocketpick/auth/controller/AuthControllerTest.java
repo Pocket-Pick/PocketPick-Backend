@@ -9,7 +9,6 @@ import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.service.AuthUseCase;
 import com.pocketpick.auth.global.exception.GlobalExceptionHandler;
 import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
-import com.pocketpick.auth.infrastructure.cookie.CookieProvider;
 import com.pocketpick.auth.support.fixture.AccountFixture;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +41,6 @@ class AuthControllerTest {
 
     @Mock
     private AuthUseCase authUseCase;
-    @Mock
-    private CookieProvider cookieProvider;
 
     @InjectMocks
     private AuthController authController;
@@ -127,8 +124,7 @@ class AuthControllerTest {
         @DisplayName("accessToken 쿠키가 있으면 200을 반환한다")
         void logout_withAccessTokenCookie_returns200() throws Exception {
             // given
-            given(cookieProvider.extractCookie(any(), anyString())).willReturn("validAccessToken");
-            willDoNothing().given(authUseCase).logout(anyString(), any());
+            willDoNothing().given(authUseCase).logout(any(), any());
 
             // when & then
             mockMvc.perform(post("/auth/logout")
@@ -140,7 +136,7 @@ class AuthControllerTest {
         @DisplayName("accessToken 쿠키가 없으면 401을 반환한다")
         void logout_missingAccessTokenCookie_returns401() throws Exception {
             // given
-            given(cookieProvider.extractCookie(any(), anyString())).willThrow(new MissingTokenException());
+            willThrow(new MissingTokenException()).given(authUseCase).logout(any(), any());
 
             // when & then
             mockMvc.perform(post("/auth/logout"))
@@ -157,8 +153,7 @@ class AuthControllerTest {
         @DisplayName("refreshToken 쿠키가 있으면 200을 반환한다")
         void reissue_withRefreshTokenCookie_returns200() throws Exception {
             // given
-            given(cookieProvider.extractCookie(any(), anyString())).willReturn("validRefreshToken");
-            willDoNothing().given(authUseCase).reissue(anyString(), any());
+            willDoNothing().given(authUseCase).reissue(any(), any());
 
             // when & then
             mockMvc.perform(post("/auth/reissue")
@@ -170,7 +165,7 @@ class AuthControllerTest {
         @DisplayName("refreshToken 쿠키가 없으면 401을 반환한다")
         void reissue_missingRefreshTokenCookie_returns401() throws Exception {
             // given
-            given(cookieProvider.extractCookie(any(), anyString())).willThrow(new MissingTokenException());
+            willThrow(new MissingTokenException()).given(authUseCase).reissue(any(), any());
 
             // when & then
             mockMvc.perform(post("/auth/reissue"))
@@ -182,8 +177,7 @@ class AuthControllerTest {
         @DisplayName("유효하지 않은 refreshToken이면 401을 반환한다")
         void reissue_invalidRefreshToken_returns401() throws Exception {
             // given
-            given(cookieProvider.extractCookie(any(), anyString())).willReturn("invalidRefreshToken");
-            willThrow(new InvalidTokenException()).given(authUseCase).reissue(anyString(), any());
+            willThrow(new InvalidTokenException()).given(authUseCase).reissue(any(), any());
 
             // when & then
             mockMvc.perform(post("/auth/reissue")
