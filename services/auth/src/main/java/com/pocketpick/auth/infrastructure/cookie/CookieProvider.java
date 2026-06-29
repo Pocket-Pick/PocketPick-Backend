@@ -1,6 +1,9 @@
 package com.pocketpick.auth.infrastructure.cookie;
 
+import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.infrastructure.jwt.JwtProperties;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
@@ -12,6 +15,19 @@ public class CookieProvider {
 
     private final JwtProperties jwtProperties;
     private final CookieProperties cookieProperties;
+
+    public String extractCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new MissingTokenException();
+        }
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        throw new MissingTokenException();
+    }
 
     public void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
         response.addHeader("Set-Cookie", buildCookie("accessToken", accessToken, (int) (jwtProperties.getAccessExpiration() / 1000)).toString());

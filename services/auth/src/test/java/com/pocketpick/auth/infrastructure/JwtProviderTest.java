@@ -68,6 +68,28 @@ class JwtProviderTest {
     }
 
     @Nested
+    @DisplayName("JTI 추출")
+    class GetJti {
+
+        @Test
+        @DisplayName("생성된 토큰마다 고유한 JTI를 가진다")
+        void getJti_eachTokenHasUniqueJti() {
+            String token1 = jwtProvider.createAccessToken(1L);
+            String token2 = jwtProvider.createAccessToken(1L);
+
+            assertThat(jwtProvider.getJti(token1)).isNotEqualTo(jwtProvider.getJti(token2));
+        }
+
+        @Test
+        @DisplayName("JTI가 null이 아니다")
+        void getJti_returnsNonNull() {
+            String token = jwtProvider.createAccessToken(1L);
+
+            assertThat(jwtProvider.getJti(token)).isNotNull();
+        }
+    }
+
+    @Nested
     @DisplayName("토큰 타입 검증")
     class ValidateTokenType {
 
