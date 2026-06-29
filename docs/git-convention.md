@@ -114,7 +114,7 @@ feat: JWT 토큰 발급 API 구현 (SCRUM-12)
 - (추가된 클래스/테이블/스케줄러 등)
 - (기존 코드에서 바뀐 핵심 부분)
 
-## 흐름
+## ~흐름 (어떤 흐름인지 적어)
 
 ```mermaid
 sequenceDiagram
@@ -127,7 +127,7 @@ sequenceDiagram
     B->>A: 처리
 ```
 
-## Before / After 비교
+## Before / After 비교 (기능 추가면 사용 X)
 
 | 상황 | Before | After |
 |------|--------|-------|
