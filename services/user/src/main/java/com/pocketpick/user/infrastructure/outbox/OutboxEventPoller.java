@@ -29,7 +29,9 @@ public class OutboxEventPoller {
                 process(event);
                 transactionHelper.markPublished(event.getId());
             } catch (Exception e) {
-                log.warn("OutboxEvent 처리 실패 id={}, type={}", event.getId(), event.getEventType(), e);
+                log.warn("OutboxEvent 처리 실패 id={}, type={}, retryCount={}",
+                        event.getId(), event.getEventType(), event.getRetryCount(), e);
+                transactionHelper.incrementRetry(event.getId());
             }
         }
     }
