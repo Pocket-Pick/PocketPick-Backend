@@ -1,5 +1,6 @@
 package com.pocketpick.auth.global.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -29,8 +30,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        log.error("Unexpected error", e);
+    public ResponseEntity<ErrorResponse> handleException(HttpServletRequest request, Exception e) {
+        log.error("Unexpected error: method={}, uri={}", request.getMethod(), request.getRequestURI(), e);
         return ResponseEntity.internalServerError()
                 .body(ErrorResponse.of("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다."));
     }
