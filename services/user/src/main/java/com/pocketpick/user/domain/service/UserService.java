@@ -12,6 +12,7 @@ import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class UserService implements UserUseCase {
     private final UserRepository userRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final AuthServiceClient authServiceClient;
+    private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -36,12 +38,13 @@ public class UserService implements UserUseCase {
         );
 
         User savedUser = userRepository.save(user);
+        String encodedPassword = passwordEncoder.encode(request.password());
         outboxEventRepository.save(OutboxEvent.create(
                 "CREDENTIALS_CREATED",
                 toJson(Map.of(
                         "userId", savedUser.getId(),
                         "email", request.email(),
-                        "password", request.password()
+                        "encodedPassword", encodedPassword
                 ))
         ));
 

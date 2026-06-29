@@ -18,12 +18,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 @DisplayName("UserService")
@@ -38,6 +40,9 @@ class UserServiceTest {
 
     @Mock
     private AuthServiceClient authServiceClient;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Spy
     private ObjectMapper objectMapper;
@@ -56,6 +61,7 @@ class UserServiceTest {
             RegisterRequest request = new RegisterRequest(UserFixture.EMAIL, UserFixture.RAW_PASSWORD, UserFixture.NICKNAME);
             given(userRepository.save(any())).willReturn(UserFixture.user());
             given(outboxEventRepository.save(any())).willReturn(null);
+            given(passwordEncoder.encode(anyString())).willReturn(UserFixture.ENCODED_PASSWORD);
 
             // when
             UserResponse response = userService.register(request);
