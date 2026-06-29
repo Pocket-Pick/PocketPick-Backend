@@ -24,5 +24,8 @@ jwt:
   access-expiration: ${JWT_ACCESS_EXPIRATION:1800000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
+internal:
+  api-key: ${INTERNAL_API_KEY}
+
 server:
   port: ${SERVER_PORT:8081}
