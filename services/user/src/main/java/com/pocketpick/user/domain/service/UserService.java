@@ -1,7 +1,5 @@
 package com.pocketpick.user.domain.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.domain.OutboxEvent;
 import com.pocketpick.user.domain.domain.User;
 import com.pocketpick.user.domain.domain.UserProfile;
@@ -16,8 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserUseCase {
@@ -26,7 +22,6 @@ public class UserService implements UserUseCase {
     private final OutboxEventRepository outboxEventRepository;
     private final AuthServiceClient authServiceClient;
     private final PasswordEncoder passwordEncoder;
-    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -39,24 +34,11 @@ public class UserService implements UserUseCase {
 
         User savedUser = userRepository.save(user);
         String encodedPassword = passwordEncoder.encode(request.password());
-        outboxEventRepository.save(OutboxEvent.create(
-                "CREDENTIALS_CREATED",
-                toJson(Map.of(
-                        "userId", savedUser.getId(),
-                        "email", request.email(),
-                        "encodedPassword", encodedPassword
-                ))
-        ));
+        outboxEventRepository.save(
+                OutboxEvent.forCredentialsCreated(savedUser.getId(), request.email(), encodedPassword)
+        );
 
         return UserResponse.from(savedUser);
-    }
-
-    private String toJson(Object value) {
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("OutboxEvent payload 직렬화 실패", e);
-        }
     }
 
     @Override
