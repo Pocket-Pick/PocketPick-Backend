@@ -22,7 +22,7 @@ public class AuthService implements AuthUseCase {
     private final CookieProvider cookieProvider;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void login(LoginRequest request, HttpServletResponse response) {
         Account account = accountRepository.findByEmail(request.email())
                 .orElseThrow(AccountNotFoundException::new);
