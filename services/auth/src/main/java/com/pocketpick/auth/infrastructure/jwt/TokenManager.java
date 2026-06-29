@@ -32,8 +32,9 @@ public class TokenManager {
 
     public void deleteTokens(Long userId, String accessToken) {
         redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
+        String jti = jwtProvider.getJti(accessToken);
         redisTemplate.opsForValue().set(
-                BLACKLIST_PREFIX + accessToken,
+                BLACKLIST_PREFIX + jti,
                 "logout",
                 Duration.ofMillis(jwtProperties.getAccessExpiration())
         );

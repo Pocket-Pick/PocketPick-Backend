@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -33,6 +34,10 @@ public class JwtProvider {
         return parseClaims(token).get(CLAIM_USER_ID, Long.class);
     }
 
+    public String getJti(String token) {
+        return parseClaims(token).getId();
+    }
+
     public void validateTokenType(String token, String expectedType) {
         String actualType = parseClaims(token).get(CLAIM_TOKEN_TYPE, String.class);
         if (!expectedType.equals(actualType)) {
@@ -43,6 +48,7 @@ public class JwtProvider {
     private String createToken(Long userId, String tokenType, long expiration) {
         Date now = new Date();
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .claim(CLAIM_USER_ID, userId)
                 .claim(CLAIM_TOKEN_TYPE, tokenType)
                 .issuedAt(now)
