@@ -9,10 +9,12 @@ import com.pocketpick.auth.infrastructure.jwt.JwtProvider;
 import com.pocketpick.auth.infrastructure.jwt.TokenManager;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService implements AuthUseCase {
@@ -37,8 +39,13 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public void logout(String accessToken, HttpServletResponse response) {
-        Long userId = jwtProvider.getUserId(accessToken);
-        tokenManager.deleteTokens(userId, accessToken);
-        cookieProvider.expireTokenCookies(response);
+        try {
+            Long userId = jwtProvider.getUserId(accessToken);
+            tokenManager.deleteTokens(userId, accessToken);
+        } catch (Exception e) {
+            log.warn("로그아웃 중 토큰 처리 실패 (쿠키는 삭제됨): {}", e.getMessage());
+        } finally {
+            cookieProvider.expireTokenCookies(response);
+        }
     }
 }

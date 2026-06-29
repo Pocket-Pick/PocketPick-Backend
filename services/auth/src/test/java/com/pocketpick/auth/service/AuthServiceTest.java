@@ -114,5 +114,20 @@ class AuthServiceTest {
             verify(tokenManager).deleteTokens(AccountFixture.USER_ID, accessToken);
             verify(cookieProvider).expireTokenCookies(response);
         }
+
+        @Test
+        @DisplayName("변조된 토큰이어도 쿠키를 만료시킨다")
+        void logout_corruptedToken_stillExpiresCookies() {
+            // given
+            String corruptedToken = "corrupted.token.value";
+            given(jwtProvider.getUserId(corruptedToken)).willThrow(new RuntimeException("invalid token"));
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when
+            authService.logout(corruptedToken, response);
+
+            // then
+            verify(cookieProvider).expireTokenCookies(response);
+        }
     }
 }
