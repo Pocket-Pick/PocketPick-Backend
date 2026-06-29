@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @DisplayName("AccountService")
@@ -84,12 +85,28 @@ class AccountServiceTest {
             // given
             CreateCredentialsRequest request = new CreateCredentialsRequest(
                     AccountFixture.USER_ID, AccountFixture.EMAIL, AccountFixture.ENCODED_PASSWORD);
+            given(accountRepository.existsByEmail(AccountFixture.EMAIL)).willReturn(false);
 
             // when
             accountService.createCredentials(request);
 
             // then
             verify(accountRepository).save(any());
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 이메일이면 저장하지 않는다")
+        void createCredentials_duplicateEmail_doesNotSave() {
+            // given
+            CreateCredentialsRequest request = new CreateCredentialsRequest(
+                    AccountFixture.USER_ID, AccountFixture.EMAIL, AccountFixture.ENCODED_PASSWORD);
+            given(accountRepository.existsByEmail(AccountFixture.EMAIL)).willReturn(true);
+
+            // when
+            accountService.createCredentials(request);
+
+            // then
+            verify(accountRepository, never()).save(any());
         }
     }
 }
