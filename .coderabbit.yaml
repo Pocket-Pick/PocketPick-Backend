@@ -48,3 +48,7 @@ reviews:
 
 chat:
   auto_reply: true
+
+early_access: false
+
+tone_instructions: "모든 리뷰 코멘트, 요약, 설명을 반드시 한국어로 작성한다."
