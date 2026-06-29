@@ -45,9 +45,9 @@ public class OutboxEventPoller {
 
             Long userId = ((Number) payload.get("userId")).longValue();
             String email = (String) payload.get("email");
-            String password = (String) payload.get("password");
+            String encodedPassword = (String) payload.get("encodedPassword");
 
-            authServiceClient.createCredentials(userId, email, password);
+            authServiceClient.createCredentials(userId, email, encodedPassword);
         }
     }
 }

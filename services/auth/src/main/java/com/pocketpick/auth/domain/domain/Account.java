@@ -2,6 +2,7 @@ package com.pocketpick.auth.domain.domain;
 
 import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
 import com.pocketpick.auth.global.BaseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

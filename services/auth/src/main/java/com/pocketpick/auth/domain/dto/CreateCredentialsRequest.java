@@ -7,6 +7,6 @@ import jakarta.validation.constraints.NotNull;
 public record CreateCredentialsRequest(
         @NotNull Long userId,
         @NotBlank @Email String email,
-        @NotBlank String password
+        @NotBlank String encodedPassword
 ) {
 }

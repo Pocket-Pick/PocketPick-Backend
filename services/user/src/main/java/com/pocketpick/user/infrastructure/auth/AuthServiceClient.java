@@ -20,10 +20,10 @@ public class AuthServiceClient {
                 .toBodilessEntity();
     }
 
-    public void createCredentials(Long userId, String email, String password) {
+    public void createCredentials(Long userId, String email, String encodedPassword) {
         restClient.post()
                 .uri("/internal/accounts/credentials")
-                .body(Map.of("userId", userId, "email", email, "password", password))
+                .body(Map.of("userId", userId, "email", email, "encodedPassword", encodedPassword))
                 .retrieve()
                 .toBodilessEntity();
     }
