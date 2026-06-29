@@ -1,6 +1,5 @@
 package com.pocketpick.user.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.service.UserService;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -43,9 +41,6 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Spy
-    private ObjectMapper objectMapper;
 
     @InjectMocks
     private UserService userService;

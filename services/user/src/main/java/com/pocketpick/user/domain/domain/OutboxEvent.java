@@ -1,5 +1,7 @@
 package com.pocketpick.user.domain.domain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,12 +33,24 @@ public class OutboxEvent {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public static OutboxEvent create(String eventType, String payload) {
+    private static final String CREDENTIALS_CREATED = "CREDENTIALS_CREATED";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    public static OutboxEvent forCredentialsCreated(Long userId, String email, String encodedPassword) {
+        CredentialsCreatedPayload payload = new CredentialsCreatedPayload(userId, email, encodedPassword);
         OutboxEvent event = new OutboxEvent();
-        event.eventType = eventType;
-        event.payload = payload;
+        event.eventType = CREDENTIALS_CREATED;
+        event.payload = toJson(payload);
         event.createdAt = LocalDateTime.now();
         return event;
+    }
+
+    private static String toJson(Object value) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("OutboxEvent payload 직렬화 실패", e);
+        }
     }
 
     public void markPublished() {

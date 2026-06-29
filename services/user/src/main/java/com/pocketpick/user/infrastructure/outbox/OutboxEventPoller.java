@@ -1,7 +1,7 @@
 package com.pocketpick.user.infrastructure.outbox;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pocketpick.user.domain.domain.CredentialsCreatedPayload;
 import com.pocketpick.user.domain.domain.OutboxEvent;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -40,14 +39,10 @@ public class OutboxEventPoller {
 
     private void process(OutboxEvent event) throws Exception {
         if ("CREDENTIALS_CREATED".equals(event.getEventType())) {
-            Map<String, Object> payload = objectMapper.readValue(
-                    event.getPayload(), new TypeReference<>() {});
+            CredentialsCreatedPayload payload = objectMapper.readValue(
+                    event.getPayload(), CredentialsCreatedPayload.class);
 
-            Long userId = ((Number) payload.get("userId")).longValue();
-            String email = (String) payload.get("email");
-            String encodedPassword = (String) payload.get("encodedPassword");
-
-            authServiceClient.createCredentials(userId, email, encodedPassword);
+            authServiceClient.createCredentials(payload.userId(), payload.email(), payload.encodedPassword());
         }
     }
 }
