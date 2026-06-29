@@ -1,10 +1,12 @@
 package com.pocketpick.auth.domain.domain;
 
+import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
 import com.pocketpick.auth.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @Entity
@@ -31,5 +33,11 @@ public class Account extends BaseEntity {
         account.password = encodedPassword;
         account.userId = userId;
         return account;
+    }
+
+    public void checkPassword(String rawPassword, PasswordEncoder encoder) {
+        if (!encoder.matches(rawPassword, this.password)) {
+            throw new InvalidPasswordException();
+        }
     }
 }
