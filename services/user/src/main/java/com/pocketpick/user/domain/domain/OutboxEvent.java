@@ -17,6 +17,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OutboxEvent {
 
+    private static final int MAX_RETRY_COUNT = 5;
+    private static final String CREDENTIALS_CREATED = "CREDENTIALS_CREATED";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,10 +35,13 @@ public class OutboxEvent {
     private boolean published = false;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private int retryCount = 0;
 
-    private static final String CREDENTIALS_CREATED = "CREDENTIALS_CREATED";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Column(nullable = false)
+    private boolean failed = false;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
     public static OutboxEvent forCredentialsCreated(Long userId, String email, String encodedPassword) {
         CredentialsCreatedPayload payload = new CredentialsCreatedPayload(userId, email, encodedPassword);
@@ -55,5 +62,12 @@ public class OutboxEvent {
 
     public void markPublished() {
         this.published = true;
+    }
+
+    public void incrementRetry() {
+        this.retryCount++;
+        if (this.retryCount >= MAX_RETRY_COUNT) {
+            this.failed = true;
+        }
     }
 }

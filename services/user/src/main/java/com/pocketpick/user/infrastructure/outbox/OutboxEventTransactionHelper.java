@@ -16,11 +16,16 @@ public class OutboxEventTransactionHelper {
 
     @Transactional
     public List<OutboxEvent> fetchUnpublished() {
-        return outboxEventRepository.findByPublishedFalse();
+        return outboxEventRepository.findByPublishedFalseAndFailedFalse();
     }
 
     @Transactional
     public void markPublished(Long eventId) {
         outboxEventRepository.findById(eventId).ifPresent(OutboxEvent::markPublished);
+    }
+
+    @Transactional
+    public void incrementRetry(Long eventId) {
+        outboxEventRepository.findById(eventId).ifPresent(OutboxEvent::incrementRetry);
     }
 }

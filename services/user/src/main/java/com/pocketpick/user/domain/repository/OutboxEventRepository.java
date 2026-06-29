@@ -13,5 +13,5 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
-    List<OutboxEvent> findByPublishedFalse();
+    List<OutboxEvent> findByPublishedFalseAndFailedFalse();
 }
