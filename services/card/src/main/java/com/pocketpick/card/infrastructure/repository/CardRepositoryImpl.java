@@ -36,6 +36,7 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
                         setIdEq(request.setId()),
                         typeEq(request.type())
                 )
+                .orderBy(card.id.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
