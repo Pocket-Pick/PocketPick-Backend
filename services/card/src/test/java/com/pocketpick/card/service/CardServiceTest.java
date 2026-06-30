@@ -1,5 +1,6 @@
 package com.pocketpick.card.service;
 
+import com.pocketpick.card.domain.domain.PokemonType;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.dto.CardSummaryResponse;
 import com.pocketpick.card.domain.repository.CardRepository;
@@ -85,6 +86,23 @@ class CardServiceTest {
             // then
             assertThat(result.getContent()).isEmpty();
             assertThat(result.getTotalElements()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("속성(type)으로 검색하면 해당 속성을 가진 카드를 반환한다")
+        void searchCards_byType_returnsMatchingCards() {
+            // given
+            CardSearchRequest request = new CardSearchRequest(null, PokemonType.FIRE, null, null, null);
+            Pageable pageable = PageRequest.of(0, 20);
+            given(cardRepository.search(request, pageable))
+                    .willReturn(new PageImpl<>(List.of(CardFixture.card()), pageable, 1));
+
+            // when
+            Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
+
+            // then
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).name()).isEqualTo(CardFixture.NAME);
         }
     }
 }
