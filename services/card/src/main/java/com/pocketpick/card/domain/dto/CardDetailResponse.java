@@ -19,7 +19,7 @@ public record CardDetailResponse(
         String imageLargeUrl,
         List<PokemonType> types
 ) {
-    public static CardDetailResponse from(Card card) {
+    public static CardDetailResponse from(Card card, List<PokemonType> types) {
         return new CardDetailResponse(
                 card.getId(),
                 card.getName(),
@@ -30,7 +30,7 @@ public record CardDetailResponse(
                 card.getNumber(),
                 card.getImageSmallUrl(),
                 card.getImageLargeUrl(),
-                card.getTypes().stream().map(t -> t.getType()).toList()
+                types
         );
     }
 }
