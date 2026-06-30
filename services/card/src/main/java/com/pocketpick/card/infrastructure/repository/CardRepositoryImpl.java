@@ -1,11 +1,13 @@
 package com.pocketpick.card.infrastructure.repository;
 
 import com.pocketpick.card.domain.domain.Card;
+import com.pocketpick.card.domain.domain.PokemonType;
 import com.pocketpick.card.domain.domain.QCard;
 import com.pocketpick.card.domain.domain.QCardType;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.repository.CardRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,33 +26,29 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
     @Override
     public Page<Card> search(CardSearchRequest request, Pageable pageable) {
         QCard card = QCard.card;
-        QCardType cardType = QCardType.cardType;
 
         List<Card> content = queryFactory
                 .selectFrom(card)
-                .leftJoin(card.types, cardType).fetchJoin()
                 .where(
                         nameContains(request.name()),
                         supertypeEq(request.supertype()),
                         rarityEq(request.rarity()),
                         setIdEq(request.setId()),
-                        typeEq(request)
+                        typeEq(request.type())
                 )
-                .distinct()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         Long total = queryFactory
-                .select(card.countDistinct())
+                .select(card.count())
                 .from(card)
-                .leftJoin(card.types, cardType)
                 .where(
                         nameContains(request.name()),
                         supertypeEq(request.supertype()),
                         rarityEq(request.rarity()),
                         setIdEq(request.setId()),
-                        typeEq(request)
+                        typeEq(request.type())
                 )
                 .fetchOne();
 
@@ -73,7 +71,13 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
         return setId != null ? QCard.card.setId.eq(setId) : null;
     }
 
-    private BooleanExpression typeEq(CardSearchRequest request) {
-        return request.type() != null ? QCardType.cardType.type.eq(request.type()) : null;
+    private BooleanExpression typeEq(PokemonType type) {
+        if (type == null) return null;
+        QCardType cardType = QCardType.cardType;
+        return QCard.card.id.in(
+                JPAExpressions.select(cardType.cardId)
+                        .from(cardType)
+                        .where(cardType.type.eq(type))
+        );
     }
 }
