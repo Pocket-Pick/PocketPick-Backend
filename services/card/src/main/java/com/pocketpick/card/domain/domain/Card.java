@@ -4,9 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "cards", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"set_id", "number"})
@@ -40,7 +37,4 @@ public class Card {
     private String imageSmallUrl;
 
     private String imageLargeUrl;
-
-    @OneToMany(mappedBy = "card", fetch = FetchType.LAZY)
-    private List<CardType> types = new ArrayList<>();
 }
