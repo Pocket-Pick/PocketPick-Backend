@@ -1,11 +1,13 @@
 package com.pocketpick.card.service;
 
+import com.pocketpick.card.domain.domain.CardType;
 import com.pocketpick.card.domain.domain.PokemonType;
 import com.pocketpick.card.domain.domain.exception.CardNotFoundException;
 import com.pocketpick.card.domain.dto.CardDetailResponse;
 import com.pocketpick.card.domain.dto.CardSearchRequest;
 import com.pocketpick.card.domain.dto.CardSummaryResponse;
 import com.pocketpick.card.domain.repository.CardRepository;
+import com.pocketpick.card.domain.repository.CardTypeRepository;
 import com.pocketpick.card.domain.service.CardService;
 import com.pocketpick.card.support.fixture.CardFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,9 @@ class CardServiceTest {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CardTypeRepository cardTypeRepository;
 
     @InjectMocks
     private CardService cardService;
@@ -118,7 +124,13 @@ class CardServiceTest {
         @DisplayName("존재하는 id면 카드 상세 응답을 반환한다")
         void getCard_existingId_returnsCardDetailResponse() {
             // given
+            CardType cardType = new CardType();
+            ReflectionTestUtils.setField(cardType, "id", 1L);
+            ReflectionTestUtils.setField(cardType, "cardId", CardFixture.ID);
+            ReflectionTestUtils.setField(cardType, "type", PokemonType.FIRE);
+
             given(cardRepository.findById(CardFixture.ID)).willReturn(Optional.of(CardFixture.card()));
+            given(cardTypeRepository.findByCardId(CardFixture.ID)).willReturn(List.of(cardType));
 
             // when
             CardDetailResponse response = cardService.getCard(CardFixture.ID);
@@ -127,6 +139,7 @@ class CardServiceTest {
             assertThat(response.id()).isEqualTo(CardFixture.ID);
             assertThat(response.name()).isEqualTo(CardFixture.NAME);
             assertThat(response.setId()).isEqualTo(CardFixture.SET_ID);
+            assertThat(response.types()).containsExactly(PokemonType.FIRE);
         }
 
         @Test
