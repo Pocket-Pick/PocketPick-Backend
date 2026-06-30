@@ -3,6 +3,15 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    testImplementation 'org.springframework.security:spring-security-test'
+    implementation libs.spring.boot.web
+    implementation libs.spring.boot.jpa
+    implementation libs.spring.boot.validation
+    implementation libs.spring.boot.security
+    runtimeOnly libs.mysql.connector
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testRuntimeOnly libs.h2
+    testImplementation libs.spring.security.test
 }

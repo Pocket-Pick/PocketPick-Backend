@@ -3,12 +3,21 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    testImplementation 'org.springframework.security:spring-security-test'
+    implementation libs.spring.boot.web
+    implementation libs.spring.boot.jpa
+    implementation libs.spring.boot.validation
+    implementation libs.spring.boot.security
+    implementation libs.spring.boot.redis
+    runtimeOnly libs.mysql.connector
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testRuntimeOnly libs.h2
+    testImplementation libs.spring.security.test
 
     // JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    implementation libs.jwt.api
+    runtimeOnly libs.jwt.impl
+    runtimeOnly libs.jwt.jackson
 }
