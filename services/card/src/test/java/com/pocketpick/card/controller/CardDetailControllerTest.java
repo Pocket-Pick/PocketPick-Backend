@@ -1,6 +1,7 @@
 package com.pocketpick.card.controller;
 
 import com.pocketpick.card.domain.controller.CardController;
+import com.pocketpick.card.domain.domain.PokemonType;
 import com.pocketpick.card.domain.domain.exception.CardNotFoundException;
 import com.pocketpick.card.domain.dto.CardDetailResponse;
 import com.pocketpick.card.domain.service.CardUseCase;
@@ -17,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,7 +54,7 @@ class CardDetailControllerTest {
         @DisplayName("존재하는 id면 200을 반환한다")
         void getCard_existingId_returns200() throws Exception {
             // given
-            CardDetailResponse response = CardDetailResponse.from(CardFixture.card());
+            CardDetailResponse response = CardDetailResponse.from(CardFixture.card(), List.of(PokemonType.FIRE));
             given(cardUseCase.getCard(CardFixture.ID)).willReturn(response);
 
             // when & then
