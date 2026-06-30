@@ -1,9 +1,9 @@
 package com.pocketpick.card.support.fixture;
 
-import com.pocketpick.card.domain.domain.*;
+import com.pocketpick.card.domain.domain.Card;
+import com.pocketpick.card.domain.domain.Rarity;
+import com.pocketpick.card.domain.domain.Supertype;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.List;
 
 public class CardFixture {
 
@@ -26,13 +26,6 @@ public class CardFixture {
         ReflectionTestUtils.setField(card, "setId", SET_ID);
         ReflectionTestUtils.setField(card, "imageSmallUrl", "https://images.pokemontcg.io/base1/4.png");
         ReflectionTestUtils.setField(card, "imageLargeUrl", "https://images.pokemontcg.io/base1/4_hires.png");
-
-        CardType cardType = new CardType();
-        ReflectionTestUtils.setField(cardType, "id", 1L);
-        ReflectionTestUtils.setField(cardType, "cardId", ID);
-        ReflectionTestUtils.setField(cardType, "type", PokemonType.FIRE);
-        ReflectionTestUtils.setField(card, "types", List.of(cardType));
-
         return card;
     }
 }
