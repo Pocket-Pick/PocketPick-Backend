@@ -3,12 +3,21 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-mysql'
+    implementation libs.spring.boot.web
+    implementation libs.spring.boot.jpa
+    implementation libs.spring.boot.validation
+    implementation libs.flyway.core
+    implementation libs.flyway.mysql
+    runtimeOnly libs.mysql.connector
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testRuntimeOnly libs.h2
 
     // Querydsl
-    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
-    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
-    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
-    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+    implementation(libs.querydsl.jpa) { artifact { classifier = 'jakarta' } }
+    annotationProcessor(libs.querydsl.apt) { artifact { classifier = 'jakarta' } }
+    annotationProcessor libs.jakarta.annotation
+    annotationProcessor libs.jakarta.persistence
 }
