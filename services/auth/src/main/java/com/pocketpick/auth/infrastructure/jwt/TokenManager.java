@@ -1,5 +1,7 @@
 package com.pocketpick.auth.infrastructure.jwt;
 
+import com.pocketpick.auth.domain.domain.exception.InvalidTokenException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,22 @@ public class TokenManager {
         );
 
         return new String[]{accessToken, refreshToken};
+    }
+
+    public String[] reissueTokens(String refreshToken) {
+        Long userId;
+        try {
+            userId = jwtProvider.getUserId(refreshToken);
+        } catch (JwtException e) {
+            throw new InvalidTokenException();
+        }
+        String stored = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
+
+        if (!refreshToken.equals(stored)) {
+            throw new InvalidTokenException();
+        }
+
+        return createTokens(userId);
     }
 
     public void deleteTokens(Long userId, String accessToken) {

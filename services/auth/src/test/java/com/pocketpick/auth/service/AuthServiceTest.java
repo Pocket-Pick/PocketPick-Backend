@@ -2,6 +2,8 @@ package com.pocketpick.auth.service;
 
 import com.pocketpick.auth.domain.domain.exception.AccountNotFoundException;
 import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
+import com.pocketpick.auth.domain.domain.exception.InvalidTokenException;
+import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
 import com.pocketpick.auth.domain.service.AuthService;
@@ -9,6 +11,8 @@ import com.pocketpick.auth.infrastructure.cookie.CookieProvider;
 import com.pocketpick.auth.infrastructure.jwt.JwtProvider;
 import com.pocketpick.auth.infrastructure.jwt.TokenManager;
 import com.pocketpick.auth.support.fixture.AccountFixture;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -104,11 +108,13 @@ class AuthServiceTest {
         void logout_validToken_deletesTokensAndExpiresCookies() {
             // given
             String accessToken = "validAccessToken";
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            given(request.getCookies()).willReturn(new Cookie[]{new Cookie("accessToken", accessToken)});
             given(jwtProvider.getUserId(accessToken)).willReturn(AccountFixture.USER_ID);
             HttpServletResponse response = mock(HttpServletResponse.class);
 
             // when
-            authService.logout(accessToken, response);
+            authService.logout(request, response);
 
             // then
             verify(tokenManager).deleteTokens(AccountFixture.USER_ID, accessToken);
@@ -116,18 +122,54 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("변조된 토큰이어도 쿠키를 만료시킨다")
-        void logout_corruptedToken_stillExpiresCookies() {
+        @DisplayName("쿠키가 없으면 MissingTokenException을 던진다")
+        void logout_missingCookie_throwsMissingTokenException() {
             // given
-            String corruptedToken = "corrupted.token.value";
-            given(jwtProvider.getUserId(corruptedToken)).willThrow(new RuntimeException("invalid token"));
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            given(request.getCookies()).willReturn(null);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when & then
+            assertThatThrownBy(() -> authService.logout(request, response))
+                    .isInstanceOf(MissingTokenException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰 재발급")
+    class Reissue {
+
+        @Test
+        @DisplayName("유효한 refresh token이면 새 토큰 쿠키를 설정한다")
+        void reissue_validRefreshToken_setsCookies() {
+            // given
+            String refreshToken = "validRefreshToken";
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            given(request.getCookies()).willReturn(new Cookie[]{new Cookie("refreshToken", refreshToken)});
+            given(tokenManager.reissueTokens(refreshToken))
+                    .willReturn(new String[]{"newAccessToken", "newRefreshToken"});
             HttpServletResponse response = mock(HttpServletResponse.class);
 
             // when
-            authService.logout(corruptedToken, response);
+            authService.reissue(request, response);
 
             // then
-            verify(cookieProvider).expireTokenCookies(response);
+            verify(cookieProvider).addTokenCookies(response, "newAccessToken", "newRefreshToken");
+        }
+
+        @Test
+        @DisplayName("Redis에 없는 refresh token이면 InvalidTokenException을 던진다")
+        void reissue_invalidRefreshToken_throwsInvalidTokenException() {
+            // given
+            String refreshToken = "invalidRefreshToken";
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            given(request.getCookies()).willReturn(new Cookie[]{new Cookie("refreshToken", refreshToken)});
+            given(tokenManager.reissueTokens(refreshToken)).willThrow(new InvalidTokenException());
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            // when & then
+            assertThatThrownBy(() -> authService.reissue(request, response))
+                    .isInstanceOf(InvalidTokenException.class);
         }
     }
 }
