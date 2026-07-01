@@ -31,7 +31,7 @@ public class CardService implements CardUseCase {
     public Page<CardSummaryResponse> searchCards(CardSearchRequest request, Pageable pageable) {
         Page<Card> cards = cardRepository.search(request, pageable);
 
-        List<Long> cardIds = cards.map(card -> card.getId()).toList();
+        List<Long> cardIds = cards.map(Card::getId).toList();
         Map<Long, List<PokemonType>> typesByCardId = cardTypeRepository.findByCardIdIn(cardIds).stream()
                 .collect(Collectors.groupingBy(
                         CardType::getCardId,
@@ -47,7 +47,7 @@ public class CardService implements CardUseCase {
         return cardRepository.findById(cardId)
                 .map(card -> {
                     List<PokemonType> types = cardTypeRepository.findByCardId(cardId).stream()
-                            .map(ct -> ct.getType())
+                            .map(CardType::getType)
                             .toList();
                     return CardDetailResponse.from(card, types);
                 })
