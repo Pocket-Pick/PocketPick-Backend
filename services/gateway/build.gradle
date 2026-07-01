@@ -11,4 +11,5 @@ dependencies {
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
+    testImplementation 'io.projectreactor:reactor-test'
 }
