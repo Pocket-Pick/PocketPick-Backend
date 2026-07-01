@@ -17,3 +17,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8082}
+
+services:
+  auth:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}

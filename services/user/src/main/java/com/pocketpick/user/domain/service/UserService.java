@@ -1,12 +1,14 @@
 package com.pocketpick.user.domain.service;
 
+import com.pocketpick.user.domain.domain.OutboxEvent;
 import com.pocketpick.user.domain.domain.User;
 import com.pocketpick.user.domain.domain.UserProfile;
-import com.pocketpick.user.domain.domain.exception.DuplicateEmailException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
+import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
+import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,23 +19,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService implements UserUseCase {
 
     private final UserRepository userRepository;
+    private final OutboxEventRepository outboxEventRepository;
+    private final AuthServiceClient authServiceClient;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateEmailException();
-        }
+        authServiceClient.validate(request.email(), request.password());
 
         User user = User.create(
-                request.email(),
-                request.password(),
-                passwordEncoder.encode(request.password()),
                 new UserProfile(request.nickname(), null, null)
         );
 
-        return UserResponse.from(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        String encodedPassword = passwordEncoder.encode(request.password());
+        outboxEventRepository.save(
+                OutboxEvent.forCredentialsCreated(savedUser.getId(), request.email(), encodedPassword)
+        );
+
+        return UserResponse.from(savedUser);
     }
 
     @Override

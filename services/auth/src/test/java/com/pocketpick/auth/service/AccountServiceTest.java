@@ -14,12 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @DisplayName("AccountService")
@@ -28,8 +28,6 @@ class AccountServiceTest {
 
     @Mock
     private AccountRepository accountRepository;
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AccountService accountService;
@@ -82,19 +80,33 @@ class AccountServiceTest {
     class CreateCredentials {
 
         @Test
-        @DisplayName("정상 요청이면 비밀번호를 인코딩해 Account를 저장한다")
-        void createCredentials_validRequest_savesEncodedPassword() {
+        @DisplayName("정상 요청이면 인코딩된 비밀번호로 Account를 저장한다")
+        void createCredentials_validRequest_savesAccount() {
             // given
             CreateCredentialsRequest request = new CreateCredentialsRequest(
-                    AccountFixture.USER_ID, AccountFixture.EMAIL, AccountFixture.RAW_PASSWORD);
-            given(passwordEncoder.encode(AccountFixture.RAW_PASSWORD))
-                    .willReturn(AccountFixture.ENCODED_PASSWORD);
+                    AccountFixture.USER_ID, AccountFixture.EMAIL, AccountFixture.ENCODED_PASSWORD);
+            given(accountRepository.existsByEmail(AccountFixture.EMAIL)).willReturn(false);
 
             // when
             accountService.createCredentials(request);
 
             // then
             verify(accountRepository).save(any());
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 이메일이면 저장하지 않는다")
+        void createCredentials_duplicateEmail_doesNotSave() {
+            // given
+            CreateCredentialsRequest request = new CreateCredentialsRequest(
+                    AccountFixture.USER_ID, AccountFixture.EMAIL, AccountFixture.ENCODED_PASSWORD);
+            given(accountRepository.existsByEmail(AccountFixture.EMAIL)).willReturn(true);
+
+            // when
+            accountService.createCredentials(request);
+
+            // then
+            verify(accountRepository, never()).save(any());
         }
     }
 }
