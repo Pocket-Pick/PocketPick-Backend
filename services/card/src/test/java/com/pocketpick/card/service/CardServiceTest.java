@@ -55,6 +55,8 @@ class CardServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             given(cardRepository.search(request, pageable))
                     .willReturn(new PageImpl<>(List.of(CardFixture.card()), pageable, 1));
+            given(cardTypeRepository.findByCardIdIn(List.of(CardFixture.ID)))
+                    .willReturn(List.of());
 
             // when
             Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
@@ -72,6 +74,8 @@ class CardServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             given(cardRepository.search(request, pageable))
                     .willReturn(new PageImpl<>(List.of(CardFixture.card()), pageable, 1));
+            given(cardTypeRepository.findByCardIdIn(List.of(CardFixture.ID)))
+                    .willReturn(List.of());
 
             // when
             Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
@@ -89,6 +93,8 @@ class CardServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             given(cardRepository.search(request, pageable))
                     .willReturn(new PageImpl<>(List.of(), pageable, 0));
+            given(cardTypeRepository.findByCardIdIn(List.of()))
+                    .willReturn(List.of());
 
             // when
             Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
@@ -106,6 +112,8 @@ class CardServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             given(cardRepository.search(request, pageable))
                     .willReturn(new PageImpl<>(List.of(CardFixture.card()), pageable, 1));
+            given(cardTypeRepository.findByCardIdIn(List.of(CardFixture.ID)))
+                    .willReturn(List.of());
 
             // when
             Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
@@ -113,6 +121,30 @@ class CardServiceTest {
             // then
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).name()).isEqualTo(CardFixture.NAME);
+        }
+
+        @Test
+        @DisplayName("카드에 속성이 있으면 types를 함께 반환한다")
+        void searchCards_withTypes_returnsTypesPerCard() {
+            // given
+            CardSearchRequest request = new CardSearchRequest(null, null, null, null, null);
+            Pageable pageable = PageRequest.of(0, 20);
+
+            CardType cardType = new CardType();
+            ReflectionTestUtils.setField(cardType, "id", 1L);
+            ReflectionTestUtils.setField(cardType, "cardId", CardFixture.ID);
+            ReflectionTestUtils.setField(cardType, "type", PokemonType.FIRE);
+
+            given(cardRepository.search(request, pageable))
+                    .willReturn(new PageImpl<>(List.of(CardFixture.card()), pageable, 1));
+            given(cardTypeRepository.findByCardIdIn(List.of(CardFixture.ID)))
+                    .willReturn(List.of(cardType));
+
+            // when
+            Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
+
+            // then
+            assertThat(result.getContent().get(0).types()).containsExactly(PokemonType.FIRE);
         }
     }
 
