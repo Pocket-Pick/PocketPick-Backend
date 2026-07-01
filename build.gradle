@@ -10,6 +10,8 @@ version = '0.0.1-SNAPSHOT'
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'io.spring.dependency-management'
+	apply plugin: 'checkstyle'
+	apply plugin: 'jacoco'
 
 	java {
 		toolchain {
@@ -34,5 +36,20 @@ subprojects {
 
 	tasks.named('test') {
 		useJUnitPlatform()
+		finalizedBy jacocoTestReport
+	}
+
+	checkstyle {
+		toolVersion = '10.21.4'
+		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+		ignoreFailures = false
+	}
+
+	jacocoTestReport {
+		dependsOn test
+		reports {
+			xml.required = true
+			html.required = true
+		}
 	}
 }

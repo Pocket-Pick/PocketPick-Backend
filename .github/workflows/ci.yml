@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      card: ${{ steps.filter.outputs.card }}
+      user: ${{ steps.filter.outputs.user }}
+      root: ${{ steps.filter.outputs.root }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'services/auth/**'
+            card:
+              - 'services/card/**'
+            user:
+              - 'services/user/**'
+            root:
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'config/**'
+
+  build:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compile
+        run: ./gradlew compileJava
+
+      - name: Checkstyle
+        run: ./gradlew checkstyleMain
+
+      - name: Test - auth
+        if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:auth:test
+
+      - name: Test - card
+        if: needs.detect-changes.outputs.card == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:card:test
+
+      - name: Test - user
+        if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:user:test
+
+      - name: JaCoCo Report
+        if: always()
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: '**/build/reports/jacoco/**/*.xml'
+          retention-days: 7
