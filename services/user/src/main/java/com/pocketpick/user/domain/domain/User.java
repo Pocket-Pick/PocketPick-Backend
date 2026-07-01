@@ -27,4 +27,8 @@ public class User extends BaseEntity {
         user.profile = profile;
         return user;
     }
+
+    public void updateProfile(UserProfile profile) {
+        this.profile = profile;
+    }
 }

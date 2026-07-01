@@ -1,6 +1,7 @@
 package com.pocketpick.user.domain.controller;
 
 import com.pocketpick.user.domain.dto.RegisterRequest;
+import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.service.UserUseCase;
 import jakarta.validation.Valid;
@@ -27,5 +28,10 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userUseCase.getUser(id));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponse> updateProfile(@PathVariable Long id, @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(userUseCase.updateProfile(id, request));
     }
 }
