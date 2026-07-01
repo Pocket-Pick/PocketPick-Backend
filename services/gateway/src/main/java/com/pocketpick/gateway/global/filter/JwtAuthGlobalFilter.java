@@ -22,12 +22,12 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
     private static final String ACCESS_TOKEN_COOKIE = "accessToken";
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final List<String> WHITE_LIST = List.of(
-            "/api/auth/login",
-            "/api/auth/reissue",
-            "/api/users"
+            "/auth/login",
+            "/auth/reissue",
+            "/users"
     );
     private static final List<String> WHITE_LIST_PREFIX = List.of(
-            "/api/cards"
+            "/cards"
     );
 
     private final JwtProvider jwtProvider;

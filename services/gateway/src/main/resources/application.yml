@@ -22,17 +22,17 @@ spring:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
-            - Path=/api/auth/**
+            - Path=/auth/**
 
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/users/**
+            - Path=/users/**
 
         - id: card-service
           uri: ${CARD_SERVICE_URL:http://localhost:8083}
           predicates:
-            - Path=/api/cards/**
+            - Path=/cards/**
 
 jwt:
   secret: ${JWT_SECRET}

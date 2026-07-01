@@ -45,7 +45,7 @@ class JwtAuthGlobalFilterTest {
         void filter_loginPath_passesWithoutToken() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.post("/api/auth/login").build()
+                    MockServerHttpRequest.post("/auth/login").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
@@ -61,7 +61,7 @@ class JwtAuthGlobalFilterTest {
         void filter_reissuePath_passesWithoutToken() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.post("/api/auth/reissue").build()
+                    MockServerHttpRequest.post("/auth/reissue").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
@@ -77,7 +77,7 @@ class JwtAuthGlobalFilterTest {
         void filter_signupPath_passesWithoutToken() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.post("/api/users").build()
+                    MockServerHttpRequest.post("/users").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
@@ -93,7 +93,7 @@ class JwtAuthGlobalFilterTest {
         void filter_cardsPath_passesWithoutToken() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.get("/api/cards").build()
+                    MockServerHttpRequest.get("/cards").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
@@ -114,7 +114,7 @@ class JwtAuthGlobalFilterTest {
         void filter_noToken_returns401() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.get("/api/users/1").build()
+                    MockServerHttpRequest.get("/users/1").build()
             );
 
             // when & then
@@ -129,7 +129,7 @@ class JwtAuthGlobalFilterTest {
         void filter_invalidToken_returns401() {
             // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.get("/api/users/1")
+                    MockServerHttpRequest.get("/users/1")
                             .cookie(new HttpCookie("accessToken", "invalid-token"))
                             .build()
             );
@@ -154,7 +154,7 @@ class JwtAuthGlobalFilterTest {
             });
 
             MockServerWebExchange exchange = MockServerWebExchange.from(
-                    MockServerHttpRequest.get("/api/users/1")
+                    MockServerHttpRequest.get("/users/1")
                             .cookie(new HttpCookie("accessToken", "valid-token"))
                             .build()
             );
