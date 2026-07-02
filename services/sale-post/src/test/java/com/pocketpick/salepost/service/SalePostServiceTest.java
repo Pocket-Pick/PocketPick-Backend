@@ -11,6 +11,7 @@ import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.infrastructure.redis.ViewCountRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
@@ -44,6 +45,9 @@ class SalePostServiceTest {
 
     @Mock
     private SalePostImageRepository salePostImageRepository;
+
+    @Mock
+    private ViewCountRepository viewCountRepository;
 
     @Mock
     private S3Uploader s3Uploader;
@@ -126,6 +130,26 @@ class SalePostServiceTest {
             // when & then
             assertThatThrownBy(() -> salePostService.getSalePost(999L))
                     .isInstanceOf(SalePostNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("조회 시 Redis INCR을 호출하고 DB+Redis 합산 viewCount를 반환한다")
+        void getSalePost_incrementsViewCountAndReturnsMergedCount() {
+            // given
+            SalePost salePost = SalePost.builder()
+                    .userId(1L).cardId(1L).title("카드").description("설명")
+                    .price(5000).cardCondition(CardCondition.GOOD).build();
+            given(salePostRepository.findById(1L)).willReturn(Optional.of(salePost));
+            given(viewCountRepository.get(1L)).willReturn(3L);
+            given(salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId()))
+                    .willReturn(List.of());
+
+            // when
+            SalePostResponse response = salePostService.getSalePost(1L);
+
+            // then
+            then(viewCountRepository).should().increment(1L);
+            assertThat(response.viewCount()).isEqualTo(3); // DB(0) + Redis(3)
         }
     }
 
