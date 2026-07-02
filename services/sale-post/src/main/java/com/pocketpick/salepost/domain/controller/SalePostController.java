@@ -3,6 +3,7 @@ package com.pocketpick.salepost.domain.controller;
 import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
 import com.pocketpick.salepost.domain.dto.SalePostResponse;
 import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.domain.service.SalePostUseCase;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import jakarta.validation.Valid;
@@ -61,6 +62,15 @@ public class SalePostController {
             @RequestBody @Valid UpdateSalePostRequest request
     ) {
         return ResponseEntity.ok(salePostUseCase.update(userId, id, request));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<SalePostResponse> updateStatus(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateSaleStatusRequest request
+    ) {
+        return ResponseEntity.ok(salePostUseCase.updateStatus(userId, id, request));
     }
 
     @DeleteMapping("/{id}")

@@ -4,6 +4,7 @@ import com.pocketpick.salepost.domain.domain.SalePostImage;
 import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
 import com.pocketpick.salepost.domain.dto.SalePostResponse;
 import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
@@ -83,6 +84,25 @@ public class SalePostService implements SalePostUseCase {
 
         salePostImageRepository.deleteBySalePostId(id);
         saveImages(id, request.imageObjectKeys());
+
+        return toResponse(salePost);
+    }
+
+    @Override
+    @Transactional
+    public SalePostResponse updateStatus(Long userId, Long id, UpdateSaleStatusRequest request) {
+        SalePost salePost = salePostRepository.findById(id)
+                .orElseThrow(SalePostNotFoundException::new);
+        if (!salePost.isOwner(userId)) {
+            throw new ForbiddenException();
+        }
+        salePost.updateStatus(request.status());
+
+        if (request.status() == SaleStatus.SOLD) {
+            List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(id);
+            images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
+            salePostImageRepository.deleteBySalePostId(id);
+        }
 
         return toResponse(salePost);
     }
