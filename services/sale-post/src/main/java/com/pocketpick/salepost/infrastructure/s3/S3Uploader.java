@@ -1,7 +1,7 @@
 package com.pocketpick.salepost.infrastructure.s3;
 
+import com.pocketpick.salepost.global.config.AwsProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -17,13 +17,11 @@ public class S3Uploader {
     private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofMinutes(10);
 
     private final S3Presigner s3Presigner;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+    private final AwsProperties awsProperties;
 
     public String generatePresignedUrl(String objectKey) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
+                .bucket(awsProperties.getS3().getBucket())
                 .key(objectKey)
                 .build();
 
@@ -37,6 +35,6 @@ public class S3Uploader {
     }
 
     public String buildImageUrl(String objectKey) {
-        return "https://" + bucket + ".s3.amazonaws.com/" + objectKey;
+        return "https://" + awsProperties.getS3().getBucket() + ".s3.amazonaws.com/" + objectKey;
     }
 }
