@@ -1,6 +1,6 @@
 package com.pocketpick.user.infrastructure.outbox;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.domain.CredentialsCreatedPayload;
 import com.pocketpick.user.domain.domain.OutboxEvent;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
