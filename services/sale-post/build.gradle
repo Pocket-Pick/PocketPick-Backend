@@ -6,6 +6,7 @@ dependencies {
     implementation libs.spring.boot.web
     implementation libs.spring.boot.jpa
     implementation libs.spring.boot.validation
+    implementation libs.spring.boot.redis
     implementation libs.flyway.core
     implementation libs.flyway.mysql
     implementation libs.aws.s3
