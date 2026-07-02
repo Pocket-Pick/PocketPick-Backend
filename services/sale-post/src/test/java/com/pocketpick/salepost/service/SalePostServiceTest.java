@@ -115,16 +115,16 @@ class SalePostServiceTest {
 
     @Nested
     @DisplayName("판매글 상세 조회")
-    class GetOne {
+    class GetSalePost {
 
         @Test
         @DisplayName("존재하지 않는 ID면 SalePostNotFoundException을 던진다")
-        void getOne_notFound_throwsException() {
+        void getSalePost_notFound_throwsException() {
             // given
             given(salePostRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> salePostService.getOne(999L))
+            assertThatThrownBy(() -> salePostService.getSalePost(999L))
                     .isInstanceOf(SalePostNotFoundException.class);
         }
     }
