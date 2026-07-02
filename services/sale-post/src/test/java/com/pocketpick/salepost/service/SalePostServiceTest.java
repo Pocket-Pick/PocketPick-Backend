@@ -1,14 +1,14 @@
 package com.pocketpick.salepost.service;
 
-import com.pocketpick.salepost.application.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.application.dto.SalePostResponse;
-import com.pocketpick.salepost.application.dto.UpdateSalePostRequest;
-import com.pocketpick.salepost.application.service.SalePostService;
-import com.pocketpick.salepost.domain.entity.CardCondition;
-import com.pocketpick.salepost.domain.entity.SalePost;
-import com.pocketpick.salepost.domain.entity.SaleStatus;
-import com.pocketpick.salepost.domain.exception.ForbiddenException;
-import com.pocketpick.salepost.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.service.SalePostService;
+import com.pocketpick.salepost.domain.domain.CardCondition;
+import com.pocketpick.salepost.domain.domain.SalePost;
+import com.pocketpick.salepost.domain.domain.SaleStatus;
+import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
+import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import org.junit.jupiter.api.DisplayName;

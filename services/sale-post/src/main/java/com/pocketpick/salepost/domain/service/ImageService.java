@@ -1,8 +1,7 @@
-package com.pocketpick.salepost.application.service;
+package com.pocketpick.salepost.domain.service;
 
-import com.pocketpick.salepost.application.dto.PresignedUrlRequest;
-import com.pocketpick.salepost.application.dto.PresignedUrlResponse;
-import com.pocketpick.salepost.application.port.ImageUseCase;
+import com.pocketpick.salepost.domain.dto.PresignedUrlRequest;
+import com.pocketpick.salepost.domain.dto.PresignedUrlResponse;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

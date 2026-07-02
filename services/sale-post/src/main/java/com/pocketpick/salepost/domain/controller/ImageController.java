@@ -1,13 +1,12 @@
-package com.pocketpick.salepost.presentation;
+package com.pocketpick.salepost.domain.controller;
 
-import com.pocketpick.salepost.application.dto.PresignedUrlRequest;
-import com.pocketpick.salepost.application.dto.PresignedUrlResponse;
-import com.pocketpick.salepost.application.port.ImageUseCase;
+import com.pocketpick.salepost.domain.dto.PresignedUrlRequest;
+import com.pocketpick.salepost.domain.dto.PresignedUrlResponse;
+import com.pocketpick.salepost.domain.service.ImageUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;

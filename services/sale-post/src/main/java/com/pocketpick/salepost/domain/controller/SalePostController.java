@@ -1,10 +1,10 @@
-package com.pocketpick.salepost.presentation;
+package com.pocketpick.salepost.domain.controller;
 
-import com.pocketpick.salepost.application.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.application.dto.SalePostResponse;
-import com.pocketpick.salepost.application.dto.UpdateSalePostRequest;
-import com.pocketpick.salepost.application.port.SalePostUseCase;
-import com.pocketpick.salepost.domain.entity.SaleStatus;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.service.SalePostUseCase;
+import com.pocketpick.salepost.domain.domain.SaleStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
