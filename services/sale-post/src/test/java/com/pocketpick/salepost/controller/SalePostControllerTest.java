@@ -1,14 +1,14 @@
 package com.pocketpick.salepost.controller;
 
-import com.pocketpick.salepost.application.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.application.dto.SalePostResponse;
-import com.pocketpick.salepost.application.port.SalePostUseCase;
-import com.pocketpick.salepost.domain.entity.CardCondition;
-import com.pocketpick.salepost.domain.entity.SaleStatus;
-import com.pocketpick.salepost.domain.exception.ForbiddenException;
-import com.pocketpick.salepost.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.service.SalePostUseCase;
+import com.pocketpick.salepost.domain.domain.CardCondition;
+import com.pocketpick.salepost.domain.domain.SaleStatus;
+import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
+import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
 import com.pocketpick.salepost.global.exception.GlobalExceptionHandler;
-import com.pocketpick.salepost.presentation.SalePostController;
+import com.pocketpick.salepost.domain.controller.SalePostController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
