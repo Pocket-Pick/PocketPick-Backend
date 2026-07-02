@@ -123,8 +123,8 @@ class SalePostControllerTest {
     class GetSalePost {
 
         @Test
-        @DisplayName("존재하는 ID면 200과 imageUrls를 반환한다")
-        void getSalePost_exists_returns200WithImageUrls() throws Exception {
+        @DisplayName("존재하는 ID면 200과 imageUrls, viewCount를 반환한다")
+        void getSalePost_exists_returns200WithImageUrlsAndViewCount() throws Exception {
             // given
             given(salePostUseCase.getSalePost(1L)).willReturn(sampleResponse());
 
@@ -132,7 +132,8 @@ class SalePostControllerTest {
             mockMvc.perform(get("/sale-posts/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1))
-                    .andExpect(jsonPath("$.imageUrls").isArray());
+                    .andExpect(jsonPath("$.imageUrls").isArray())
+                    .andExpect(jsonPath("$.viewCount").value(0));
         }
 
         @Test
