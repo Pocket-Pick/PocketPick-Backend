@@ -1,10 +1,11 @@
 package com.pocketpick.card.domain.domain.exception;
 
 import com.pocketpick.card.global.exception.BusinessException;
-import org.springframework.http.HttpStatus;
+import com.pocketpick.card.global.exception.ErrorCode;
 
 public abstract class CardException extends BusinessException {
-    protected CardException(String errorCode, String message, HttpStatus httpStatus) {
-        super(errorCode, message, httpStatus);
+
+    protected CardException(ErrorCode errorCode) {
+        super(errorCode);
     }
 }
