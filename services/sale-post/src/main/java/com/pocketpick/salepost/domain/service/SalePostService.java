@@ -9,6 +9,7 @@ import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.infrastructure.redis.ViewCountRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
@@ -27,6 +28,7 @@ public class SalePostService implements SalePostUseCase {
 
     private final SalePostRepository salePostRepository;
     private final SalePostImageRepository salePostImageRepository;
+    private final ViewCountRepository viewCountRepository;
     private final S3Uploader s3Uploader;
 
     @Override
@@ -68,7 +70,8 @@ public class SalePostService implements SalePostUseCase {
     public SalePostResponse getSalePost(Long id) {
         SalePost salePost = salePostRepository.findById(id)
                 .orElseThrow(SalePostNotFoundException::new);
-        return toResponse(salePost);
+        viewCountRepository.increment(id);
+        return toResponseWithViewCount(salePost, id);
     }
 
     @Override
@@ -139,5 +142,14 @@ public class SalePostService implements SalePostUseCase {
                 .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
                 .toList();
         return SalePostResponse.from(salePost, imageUrls, salePost.getViewCount());
+    }
+
+    private SalePostResponse toResponseWithViewCount(SalePost salePost, Long salePostId) {
+        List<String> imageUrls = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())
+                .stream()
+                .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
+                .toList();
+        int viewCount = (int) (salePost.getViewCount() + viewCountRepository.get(salePostId));
+        return SalePostResponse.from(salePost, imageUrls, viewCount);
     }
 }
