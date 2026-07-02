@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record UpdateSalePostRequest(
         @NotBlank
         @Size(max = 100)
@@ -19,6 +21,6 @@ public record UpdateSalePostRequest(
         @NotNull
         CardCondition cardCondition,
 
-        String imageObjectKey
+        List<String> imageObjectKeys
 ) {
 }
