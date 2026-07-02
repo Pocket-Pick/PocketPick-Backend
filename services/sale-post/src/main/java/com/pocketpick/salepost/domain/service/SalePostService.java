@@ -1,13 +1,12 @@
-package com.pocketpick.salepost.application.service;
+package com.pocketpick.salepost.domain.service;
 
-import com.pocketpick.salepost.application.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.application.dto.SalePostResponse;
-import com.pocketpick.salepost.application.dto.UpdateSalePostRequest;
-import com.pocketpick.salepost.application.port.SalePostUseCase;
-import com.pocketpick.salepost.domain.entity.SalePost;
-import com.pocketpick.salepost.domain.entity.SaleStatus;
-import com.pocketpick.salepost.domain.exception.ForbiddenException;
-import com.pocketpick.salepost.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.domain.SalePost;
+import com.pocketpick.salepost.domain.domain.SaleStatus;
+import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
+import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
