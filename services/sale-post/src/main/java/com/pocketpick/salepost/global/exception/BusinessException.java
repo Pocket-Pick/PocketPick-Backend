@@ -1,17 +1,14 @@
 package com.pocketpick.salepost.global.exception;
 
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 public abstract class BusinessException extends RuntimeException {
 
-    private final String errorCode;
-    private final HttpStatus httpStatus;
+    private final ErrorCode errorCode;
 
-    protected BusinessException(String errorCode, String message, HttpStatus httpStatus) {
-        super(message);
+    protected BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
         this.errorCode = errorCode;
-        this.httpStatus = httpStatus;
     }
 }
