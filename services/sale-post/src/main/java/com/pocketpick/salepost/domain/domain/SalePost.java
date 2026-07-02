@@ -41,8 +41,6 @@ public class SalePost {
     @Column(nullable = false, length = 20)
     private SaleStatus status;
 
-    private String imageObjectKey;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,28 +49,23 @@ public class SalePost {
 
     @Builder
     private SalePost(Long userId, Long cardId, String title, String description,
-                     int price, CardCondition cardCondition, String imageObjectKey) {
+                     int price, CardCondition cardCondition) {
         this.userId = userId;
         this.cardId = cardId;
         this.title = title;
         this.description = description;
         this.price = price;
         this.cardCondition = cardCondition;
-        this.imageObjectKey = imageObjectKey;
         this.status = SaleStatus.ON_SALE;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String title, String description, int price,
-                       CardCondition cardCondition, String imageObjectKey) {
+    public void update(String title, String description, int price, CardCondition cardCondition) {
         this.title = title;
         this.description = description;
         this.price = price;
         this.cardCondition = cardCondition;
-        if (imageObjectKey != null) {
-            this.imageObjectKey = imageObjectKey;
-        }
         this.updatedAt = LocalDateTime.now();
     }
 
