@@ -138,6 +138,6 @@ public class SalePostService implements SalePostUseCase {
                 .stream()
                 .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
                 .toList();
-        return SalePostResponse.from(salePost, imageUrls);
+        return SalePostResponse.from(salePost, imageUrls, salePost.getViewCount());
     }
 }

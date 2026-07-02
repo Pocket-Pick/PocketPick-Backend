@@ -41,6 +41,9 @@ public class SalePost {
     @Column(nullable = false, length = 20)
     private SaleStatus status;
 
+    @Column(nullable = false)
+    private int viewCount;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -57,6 +60,7 @@ public class SalePost {
         this.price = price;
         this.cardCondition = cardCondition;
         this.status = SaleStatus.ON_SALE;
+        this.viewCount = 0;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -72,6 +76,10 @@ public class SalePost {
     public void updateStatus(SaleStatus status) {
         this.status = status;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementViewCount(int delta) {
+        this.viewCount += delta;
     }
 
     public boolean isOwner(Long userId) {

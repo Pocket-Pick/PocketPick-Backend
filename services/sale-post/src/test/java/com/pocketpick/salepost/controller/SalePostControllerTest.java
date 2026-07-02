@@ -63,7 +63,7 @@ class SalePostControllerTest {
                 1L, 1L, 1L, "카드 팝니다", "상태 좋아요",
                 10000, CardCondition.MINT, SaleStatus.ON_SALE,
                 List.of("https://bucket.s3.amazonaws.com/images/posts/1/uuid.jpg"),
-                LocalDateTime.now(), LocalDateTime.now()
+                0, LocalDateTime.now(), LocalDateTime.now()
         );
     }
 
@@ -72,7 +72,7 @@ class SalePostControllerTest {
                 1L, 1L, 1L, "카드 팝니다", "상태 좋아요",
                 10000, CardCondition.MINT, SaleStatus.SOLD,
                 List.of(),
-                LocalDateTime.now(), LocalDateTime.now()
+                0, LocalDateTime.now(), LocalDateTime.now()
         );
     }
 

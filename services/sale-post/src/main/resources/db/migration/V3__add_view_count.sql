@@ -1,0 +1,2 @@
+ALTER TABLE sale_post
+    ADD COLUMN view_count INT NOT NULL DEFAULT 0;

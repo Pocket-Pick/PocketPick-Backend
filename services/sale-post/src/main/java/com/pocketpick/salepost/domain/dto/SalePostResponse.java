@@ -17,11 +17,12 @@ public record SalePostResponse(
         CardCondition cardCondition,
         SaleStatus status,
         List<String> imageUrls,
+        int viewCount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
 
-    public static SalePostResponse from(SalePost salePost, List<String> imageUrls) {
+    public static SalePostResponse from(SalePost salePost, List<String> imageUrls, int viewCount) {
         return new SalePostResponse(
                 salePost.getId(),
                 salePost.getUserId(),
@@ -32,6 +33,7 @@ public record SalePostResponse(
                 salePost.getCardCondition(),
                 salePost.getStatus(),
                 imageUrls,
+                viewCount,
                 salePost.getCreatedAt(),
                 salePost.getUpdatedAt()
         );
