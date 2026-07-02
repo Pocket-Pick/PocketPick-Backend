@@ -120,13 +120,13 @@ class SalePostControllerTest {
 
     @Nested
     @DisplayName("GET /sale-posts/{id}")
-    class GetOne {
+    class GetSalePost {
 
         @Test
         @DisplayName("존재하는 ID면 200과 imageUrls를 반환한다")
-        void getOne_exists_returns200WithImageUrls() throws Exception {
+        void getSalePost_exists_returns200WithImageUrls() throws Exception {
             // given
-            given(salePostUseCase.getOne(1L)).willReturn(sampleResponse());
+            given(salePostUseCase.getSalePost(1L)).willReturn(sampleResponse());
 
             // when & then
             mockMvc.perform(get("/sale-posts/1"))
@@ -137,9 +137,9 @@ class SalePostControllerTest {
 
         @Test
         @DisplayName("존재하지 않는 ID면 404를 반환한다")
-        void getOne_notFound_returns404() throws Exception {
+        void getSalePost_notFound_returns404() throws Exception {
             // given
-            given(salePostUseCase.getOne(999L)).willThrow(new SalePostNotFoundException());
+            given(salePostUseCase.getSalePost(999L)).willThrow(new SalePostNotFoundException());
 
             // when & then
             mockMvc.perform(get("/sale-posts/999"))

@@ -49,7 +49,7 @@ public class SalePostService implements SalePostUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SalePostResponse> getList(Long cardId, SaleStatus status, Pageable pageable) {
+    public Page<SalePostResponse> getSalePostList(Long cardId, SaleStatus status, Pageable pageable) {
         Page<SalePost> posts;
         if (cardId != null && status != null) {
             posts = salePostRepository.findByCardIdAndStatus(cardId, status, pageable);
@@ -65,7 +65,7 @@ public class SalePostService implements SalePostUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public SalePostResponse getOne(Long id) {
+    public SalePostResponse getSalePost(Long id) {
         SalePost salePost = salePostRepository.findById(id)
                 .orElseThrow(SalePostNotFoundException::new);
         return toResponse(salePost);
