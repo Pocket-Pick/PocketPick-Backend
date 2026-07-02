@@ -2,6 +2,7 @@ package com.pocketpick.salepost.controller;
 
 import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
 import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.domain.service.SalePostUseCase;
 import com.pocketpick.salepost.domain.domain.CardCondition;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
@@ -31,6 +32,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,16 +67,26 @@ class SalePostControllerTest {
         );
     }
 
+    private SalePostResponse soldResponse() {
+        return new SalePostResponse(
+                1L, 1L, 1L, "카드 팝니다", "상태 좋아요",
+                10000, CardCondition.MINT, SaleStatus.SOLD,
+                List.of(),
+                LocalDateTime.now(), LocalDateTime.now()
+        );
+    }
+
     @Nested
     @DisplayName("POST /sale-posts")
     class CreateSalePost {
 
         @Test
-        @DisplayName("정상 요청이면 201을 반환한다")
-        void create_validRequest_returns201() throws Exception {
+        @DisplayName("정상 요청이면 201과 imageUrls를 반환한다")
+        void create_validRequest_returns201WithImageUrls() throws Exception {
             // given
             CreateSalePostRequest request = new CreateSalePostRequest(
-                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT, List.of("images/temp/1/uuid.jpg")
+                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT,
+                    List.of("images/temp/1/uuid.jpg")
             );
             given(salePostUseCase.create(eq(1L), any())).willReturn(sampleResponse());
 
@@ -85,7 +97,8 @@ class SalePostControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.title").value("카드 팝니다"))
-                    .andExpect(jsonPath("$.price").value(10000));
+                    .andExpect(jsonPath("$.price").value(10000))
+                    .andExpect(jsonPath("$.imageUrls[0]").value("https://bucket.s3.amazonaws.com/images/posts/1/uuid.jpg"));
         }
 
         @Test
@@ -110,15 +123,16 @@ class SalePostControllerTest {
     class GetOne {
 
         @Test
-        @DisplayName("존재하는 ID면 200을 반환한다")
-        void getOne_exists_returns200() throws Exception {
+        @DisplayName("존재하는 ID면 200과 imageUrls를 반환한다")
+        void getOne_exists_returns200WithImageUrls() throws Exception {
             // given
             given(salePostUseCase.getOne(1L)).willReturn(sampleResponse());
 
             // when & then
             mockMvc.perform(get("/sale-posts/1"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(1));
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.imageUrls").isArray());
         }
 
         @Test
@@ -130,6 +144,54 @@ class SalePostControllerTest {
             // when & then
             mockMvc.perform(get("/sale-posts/999"))
                     .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /sale-posts/{id}/status")
+    class UpdateStatus {
+
+        @Test
+        @DisplayName("본인이면 상태를 변경하고 200을 반환한다")
+        void updateStatus_owner_returns200() throws Exception {
+            // given
+            UpdateSaleStatusRequest request = new UpdateSaleStatusRequest(SaleStatus.SOLD);
+            given(salePostUseCase.updateStatus(eq(1L), eq(1L), any())).willReturn(soldResponse());
+
+            // when & then
+            mockMvc.perform(patch("/sale-posts/1/status")
+                            .header("X-User-Id", "1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("SOLD"))
+                    .andExpect(jsonPath("$.imageUrls").isEmpty());
+        }
+
+        @Test
+        @DisplayName("본인이 아니면 403을 반환한다")
+        void updateStatus_notOwner_returns403() throws Exception {
+            // given
+            UpdateSaleStatusRequest request = new UpdateSaleStatusRequest(SaleStatus.SOLD);
+            willThrow(new ForbiddenException()).given(salePostUseCase).updateStatus(eq(2L), eq(1L), any());
+
+            // when & then
+            mockMvc.perform(patch("/sale-posts/1/status")
+                            .header("X-User-Id", "2")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("status가 없으면 400을 반환한다")
+        void updateStatus_missingStatus_returns400() throws Exception {
+            // when & then
+            mockMvc.perform(patch("/sale-posts/1/status")
+                            .header("X-User-Id", "1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+                    .andExpect(status().isBadRequest());
         }
     }
 
