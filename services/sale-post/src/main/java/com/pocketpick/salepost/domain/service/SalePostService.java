@@ -99,9 +99,7 @@ public class SalePostService implements SalePostUseCase {
         salePost.updateStatus(request.status());
 
         if (request.status() == SaleStatus.SOLD) {
-            List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(id);
-            images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
-            salePostImageRepository.deleteBySalePostId(id);
+            deleteImages(id);
         }
 
         return toResponse(salePost);
@@ -115,10 +113,14 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
-        List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(id);
-        images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
-        salePostImageRepository.deleteBySalePostId(id);
+        deleteImages(id);
         salePostRepository.delete(salePost);
+    }
+
+    private void deleteImages(Long salePostId) {
+        List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePostId);
+        images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
+        salePostImageRepository.deleteBySalePostId(salePostId);
     }
 
     private void saveImages(Long salePostId, List<String> tempObjectKeys) {
