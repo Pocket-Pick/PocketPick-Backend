@@ -18,6 +18,7 @@ jobs:
       auth: ${{ steps.filter.outputs.auth }}
       card: ${{ steps.filter.outputs.card }}
       user: ${{ steps.filter.outputs.user }}
+      sale-post: ${{ steps.filter.outputs.sale-post }}
       root: ${{ steps.filter.outputs.root }}
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +33,8 @@ jobs:
               - 'services/card/**'
             user:
               - 'services/user/**'
+            sale-post:
+              - 'services/sale-post/**'
             root:
               - 'build.gradle'
               - 'settings.gradle'
@@ -52,11 +55,37 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile
-        run: ./gradlew compileJava
+      - name: Compile - auth
+        if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:auth:compileJava
 
-      - name: Checkstyle
-        run: ./gradlew checkstyleMain
+      - name: Compile - card
+        if: needs.detect-changes.outputs.card == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:card:compileJava
+
+      - name: Compile - user
+        if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:user:compileJava
+
+      - name: Compile - sale-post
+        if: needs.detect-changes.outputs.sale-post == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:sale-post:compileJava
+
+      - name: Checkstyle - auth
+        if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:auth:checkstyleMain
+
+      - name: Checkstyle - card
+        if: needs.detect-changes.outputs.card == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:card:checkstyleMain
+
+      - name: Checkstyle - user
+        if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:user:checkstyleMain
+
+      - name: Checkstyle - sale-post
+        if: needs.detect-changes.outputs.sale-post == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:sale-post:checkstyleMain
 
       - name: Test - auth
         if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.root == 'true'
@@ -70,9 +99,25 @@ jobs:
         if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.root == 'true'
         run: ./gradlew :services:user:test
 
-      - name: JaCoCo Report
-        if: always()
-        run: ./gradlew jacocoTestReport
+      - name: Test - sale-post
+        if: needs.detect-changes.outputs.sale-post == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:sale-post:test
+
+      - name: JaCoCo Report - auth
+        if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:auth:jacocoTestReport
+
+      - name: JaCoCo Report - card
+        if: needs.detect-changes.outputs.card == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:card:jacocoTestReport
+
+      - name: JaCoCo Report - user
+        if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:user:jacocoTestReport
+
+      - name: JaCoCo Report - sale-post
+        if: needs.detect-changes.outputs.sale-post == 'true' || needs.detect-changes.outputs.root == 'true'
+        run: ./gradlew :services:sale-post:jacocoTestReport
 
       - name: Upload coverage report
         if: always()
