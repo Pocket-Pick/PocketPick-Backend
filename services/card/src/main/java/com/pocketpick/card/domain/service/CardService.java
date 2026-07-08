@@ -32,11 +32,13 @@ public class CardService implements CardUseCase {
         Page<Card> cards = cardRepository.search(request, pageable);
 
         List<Long> cardIds = cards.map(Card::getId).toList();
-        Map<Long, List<PokemonType>> typesByCardId = cardTypeRepository.findByCardIdIn(cardIds).stream()
-                .collect(Collectors.groupingBy(
-                        CardType::getCardId,
-                        Collectors.mapping(CardType::getType, Collectors.toList())
-                ));
+        Map<Long, List<PokemonType>> typesByCardId = cardIds.isEmpty()
+                ? Map.of()
+                : cardTypeRepository.findByCardIdIn(cardIds).stream()
+                        .collect(Collectors.groupingBy(
+                                CardType::getCardId,
+                                Collectors.mapping(CardType::getType, Collectors.toList())
+                        ));
 
         return cards.map(card -> CardSummaryResponse.from(card, typesByCardId.getOrDefault(card.getId(), List.of())));
     }

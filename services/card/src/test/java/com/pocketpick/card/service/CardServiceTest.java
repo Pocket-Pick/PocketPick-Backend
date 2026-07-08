@@ -93,8 +93,6 @@ class CardServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             given(cardRepository.search(request, pageable))
                     .willReturn(new PageImpl<>(List.of(), pageable, 0));
-            given(cardTypeRepository.findByCardIdIn(List.of()))
-                    .willReturn(List.of());
 
             // when
             Page<CardSummaryResponse> result = cardService.searchCards(request, pageable);
