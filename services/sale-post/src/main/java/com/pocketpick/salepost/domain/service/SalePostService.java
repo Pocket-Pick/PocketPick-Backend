@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,8 +121,14 @@ public class SalePostService implements SalePostUseCase {
 
     private void deleteImages(Long salePostId) {
         List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePostId);
-        images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
+        List<String> objectKeys = images.stream().map(SalePostImage::getObjectKey).toList();
         salePostImageRepository.deleteBySalePostId(salePostId);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                objectKeys.forEach(s3Uploader::deleteObject);
+            }
+        });
     }
 
     private void saveImages(Long salePostId, List<String> tempObjectKeys) {
