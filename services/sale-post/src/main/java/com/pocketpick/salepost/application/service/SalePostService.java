@@ -9,6 +9,7 @@ import com.pocketpick.salepost.domain.entity.SaleStatus;
 import com.pocketpick.salepost.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.exception.SalePostNotFoundException;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
+import com.pocketpick.salepost.infrastructure.repository.SalePostSpec;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,17 +42,8 @@ public class SalePostService implements SalePostUseCase {
     @Override
     @Transactional(readOnly = true)
     public Page<SalePostResponse> getList(Long cardId, SaleStatus status, Pageable pageable) {
-        Page<SalePost> posts;
-        if (cardId != null && status != null) {
-            posts = salePostRepository.findByCardIdAndStatus(cardId, status, pageable);
-        } else if (cardId != null) {
-            posts = salePostRepository.findByCardId(cardId, pageable);
-        } else if (status != null) {
-            posts = salePostRepository.findByStatus(status, pageable);
-        } else {
-            posts = salePostRepository.findAll(pageable);
-        }
-        return posts.map(this::toResponse);
+        return salePostRepository.findAll(SalePostSpec.filter(cardId, status), pageable)
+                .map(this::toResponse);
     }
 
     @Override
