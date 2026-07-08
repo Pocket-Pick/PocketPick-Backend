@@ -1,5 +1,6 @@
 package com.pocketpick.salepost.domain.domain;
 
+import com.pocketpick.salepost.domain.domain.exception.InvalidStatusTransitionException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -69,8 +70,11 @@ public class SalePost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateStatus(SaleStatus status) {
-        this.status = status;
+    public void updateStatus(SaleStatus newStatus) {
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw new InvalidStatusTransitionException();
+        }
+        this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
     }
 
