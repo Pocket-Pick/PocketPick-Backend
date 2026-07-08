@@ -41,6 +41,7 @@ public class SalePost {
     @Column(nullable = false, length = 20)
     private SaleStatus status;
 
+    @Column(length = 500)
     private String imageObjectKey;
 
     @Column(nullable = false, updatable = false)
@@ -52,6 +53,7 @@ public class SalePost {
     @Builder
     private SalePost(Long userId, Long cardId, String title, String description,
                      int price, CardCondition cardCondition, String imageObjectKey) {
+        if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
         this.userId = userId;
         this.cardId = cardId;
         this.title = title;
@@ -66,6 +68,7 @@ public class SalePost {
 
     public void update(String title, String description, int price,
                        CardCondition cardCondition, String imageObjectKey) {
+        if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
         this.title = title;
         this.description = description;
         this.price = price;
