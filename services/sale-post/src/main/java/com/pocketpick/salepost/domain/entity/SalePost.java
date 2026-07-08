@@ -64,15 +64,16 @@ public class SalePost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String title, String description, int price,
+    public void update(String title, String description, Integer price,
                        CardCondition cardCondition, String imageObjectKey) {
-        this.title = title;
-        this.description = description;
-        this.price = price;
-        this.cardCondition = cardCondition;
-        if (imageObjectKey != null) {
-            this.imageObjectKey = imageObjectKey;
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (price != null) {
+            if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+            this.price = price;
         }
+        if (cardCondition != null) this.cardCondition = cardCondition;
+        if (imageObjectKey != null) this.imageObjectKey = imageObjectKey;
         this.updatedAt = LocalDateTime.now();
     }
 
