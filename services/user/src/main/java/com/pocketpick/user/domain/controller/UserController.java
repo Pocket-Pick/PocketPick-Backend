@@ -1,5 +1,6 @@
 package com.pocketpick.user.domain.controller;
 
+import com.pocketpick.user.domain.dto.RegisterFcmTokenRequest;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
@@ -39,5 +40,11 @@ public class UserController {
     @PatchMapping("/{id}/notification")
     public ResponseEntity<UserResponse> updateNotification(@PathVariable Long id, @Valid @RequestBody UpdateNotificationRequest request) {
         return ResponseEntity.ok(userUseCase.updateNotification(id, request));
+    }
+
+    @PutMapping("/{id}/fcm-token")
+    public ResponseEntity<Void> registerFcmToken(@PathVariable Long id, @Valid @RequestBody RegisterFcmTokenRequest request) {
+        userUseCase.registerFcmToken(id, request);
+        return ResponseEntity.noContent().build();
     }
 }

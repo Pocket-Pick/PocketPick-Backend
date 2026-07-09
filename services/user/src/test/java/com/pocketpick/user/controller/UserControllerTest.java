@@ -1,6 +1,6 @@
 package com.pocketpick.user.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.controller.UserController;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;

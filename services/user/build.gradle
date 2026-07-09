@@ -7,6 +7,7 @@ dependencies {
     implementation libs.spring.boot.jpa
     implementation libs.spring.boot.validation
     implementation libs.spring.boot.security
+    implementation libs.spring.boot.redis
     runtimeOnly libs.mysql.connector
     compileOnly libs.lombok
     annotationProcessor libs.lombok
