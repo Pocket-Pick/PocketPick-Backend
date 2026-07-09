@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SalePostItem {
 
+    private static final int MIN_QUANTITY = 1;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +32,7 @@ public class SalePostItem {
     private int quantity;
 
     public static SalePostItem of(Long salePostId, Long cardId, CardCondition cardCondition, int quantity) {
-        if (quantity < 1) {
+        if (quantity < MIN_QUANTITY) {
             throw new InvalidItemQuantityException();
         }
         SalePostItem item = new SalePostItem();
