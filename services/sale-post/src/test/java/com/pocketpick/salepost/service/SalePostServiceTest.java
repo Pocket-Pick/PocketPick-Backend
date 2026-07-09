@@ -8,14 +8,18 @@ import com.pocketpick.salepost.domain.domain.CardCondition;
 import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
+import com.pocketpick.salepost.domain.domain.exception.ReservedPostException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -112,6 +116,25 @@ class SalePostServiceTest {
         }
 
         @Test
+        @DisplayName("RESERVED 상태이면 ReservedPostException을 던진다")
+        void update_reservedStatus_throwsReservedPostException() {
+            // given
+            SalePost salePost = SalePost.builder()
+                    .userId(1L).cardId(1L).title("제목").description("설명")
+                    .price(5000).cardCondition(CardCondition.GOOD).build();
+            salePost.updateStatus(SaleStatus.RESERVED);
+            given(salePostRepository.findById(1L)).willReturn(Optional.of(salePost));
+
+            UpdateSalePostRequest request = new UpdateSalePostRequest(
+                    "수정 제목", "수정 설명", 6000, CardCondition.MINT, null
+            );
+
+            // when & then
+            assertThatThrownBy(() -> salePostService.update(1L, 1L, request))
+                    .isInstanceOf(ReservedPostException.class);
+        }
+
+        @Test
         @DisplayName("본인이면 판매글을 수정하고 응답을 반환한다")
         void update_owner_updatesAndReturnsResponse() {
             // given
@@ -153,6 +176,31 @@ class SalePostServiceTest {
         }
 
         @Test
+        @DisplayName("RESERVED 상태이면 ReservedPostException을 던진다")
+        void delete_reservedStatus_throwsReservedPostException() {
+            // given
+            SalePost salePost = SalePost.builder()
+                    .userId(1L).cardId(1L).title("제목").description("설명")
+                    .price(5000).cardCondition(CardCondition.GOOD).build();
+            salePost.updateStatus(SaleStatus.RESERVED);
+            given(salePostRepository.findById(1L)).willReturn(Optional.of(salePost));
+
+            // when & then
+            assertThatThrownBy(() -> salePostService.delete(1L, 1L))
+                    .isInstanceOf(ReservedPostException.class);
+        }
+
+        @BeforeEach
+        void initTransactionSynchronization() {
+            TransactionSynchronizationManager.initSynchronization();
+        }
+
+        @AfterEach
+        void clearTransactionSynchronization() {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+
+        @Test
         @DisplayName("본인이면 판매글을 삭제한다")
         void delete_owner_deletesSalePost() {
             // given
@@ -160,6 +208,7 @@ class SalePostServiceTest {
                     .userId(1L).cardId(1L).title("제목").description("설명")
                     .price(5000).cardCondition(CardCondition.GOOD).build();
             given(salePostRepository.findById(1L)).willReturn(Optional.of(salePost));
+            given(salePostImageRepository.findBySalePostIdOrderBySortOrder(1L)).willReturn(List.of());
 
             // when
             salePostService.delete(1L, 1L);
