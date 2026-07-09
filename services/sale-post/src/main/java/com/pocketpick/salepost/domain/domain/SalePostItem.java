@@ -1,5 +1,6 @@
 package com.pocketpick.salepost.domain.domain;
 
+import com.pocketpick.salepost.domain.domain.exception.InvalidItemQuantityException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,6 +30,9 @@ public class SalePostItem {
     private int quantity;
 
     public static SalePostItem of(Long salePostId, Long cardId, CardCondition cardCondition, int quantity) {
+        if (quantity < 1) {
+            throw new InvalidItemQuantityException();
+        }
         SalePostItem item = new SalePostItem();
         item.salePostId = salePostId;
         item.cardId = cardId;
