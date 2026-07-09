@@ -12,7 +12,7 @@ public interface SalePostUseCase {
 
     SalePostResponse create(Long userId, CreateSalePostRequest request);
 
-    Page<SalePostResponse> getList(Long cardId, SaleStatus status, Pageable pageable);
+    Page<SalePostResponse> getList(SaleStatus status, Pageable pageable);
 
     SalePostResponse getOne(Long id);
 

@@ -43,11 +43,10 @@ public class SalePostController {
 
     @GetMapping
     public ResponseEntity<Page<SalePostResponse>> getList(
-            @RequestParam(required = false) Long cardId,
             @RequestParam(required = false) SaleStatus status,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(salePostUseCase.getList(cardId, status, pageable));
+        return ResponseEntity.ok(salePostUseCase.getList(status, pageable));
     }
 
     @GetMapping("/{id}")

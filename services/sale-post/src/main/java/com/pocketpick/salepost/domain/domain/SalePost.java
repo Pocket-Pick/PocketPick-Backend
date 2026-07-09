@@ -23,9 +23,6 @@ public class SalePost {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
-    private Long cardId;
-
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -34,10 +31,6 @@ public class SalePost {
 
     @Column(nullable = false)
     private int price;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private CardCondition cardCondition;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -50,27 +43,23 @@ public class SalePost {
     private LocalDateTime updatedAt;
 
     @Builder
-    private SalePost(Long userId, Long cardId, String title, String description,
-                     int price, CardCondition cardCondition) {
+    private SalePost(Long userId, String title, String description, int price) {
         this.userId = userId;
-        this.cardId = cardId;
         this.title = title;
         this.description = description;
         this.price = price;
-        this.cardCondition = cardCondition;
         this.status = SaleStatus.ON_SALE;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String title, String description, int price, CardCondition cardCondition) {
+    public void update(String title, String description, int price) {
         if (this.status == SaleStatus.RESERVED) {
             throw new ReservedPostException();
         }
         this.title = title;
         this.description = description;
         this.price = price;
-        this.cardCondition = cardCondition;
         this.updatedAt = LocalDateTime.now();
     }
 

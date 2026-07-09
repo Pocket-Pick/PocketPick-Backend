@@ -1,15 +1,19 @@
 package com.pocketpick.salepost.domain.service;
 
-import com.pocketpick.salepost.domain.domain.SalePostImage;
-import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.domain.dto.SalePostResponse;
-import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
-import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.domain.domain.SalePost;
+import com.pocketpick.salepost.domain.domain.SalePostImage;
+import com.pocketpick.salepost.domain.domain.SalePostItem;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostItemRequest;
+import com.pocketpick.salepost.domain.dto.SalePostItemResponse;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
+import com.pocketpick.salepost.infrastructure.repository.SalePostItemRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +33,7 @@ public class SalePostService implements SalePostUseCase {
 
     private final SalePostRepository salePostRepository;
     private final SalePostImageRepository salePostImageRepository;
+    private final SalePostItemRepository salePostItemRepository;
     private final S3Uploader s3Uploader;
 
     @Override
@@ -36,14 +41,13 @@ public class SalePostService implements SalePostUseCase {
     public SalePostResponse create(Long userId, CreateSalePostRequest request) {
         SalePost salePost = SalePost.builder()
                 .userId(userId)
-                .cardId(request.cardId())
                 .title(request.title())
                 .description(request.description())
                 .price(request.price())
-                .cardCondition(request.cardCondition())
                 .build();
         SalePost saved = salePostRepository.save(salePost);
 
+        saveItems(saved.getId(), request.items());
         saveImages(saved.getId(), request.imageObjectKeys());
 
         return toResponse(saved);
@@ -51,18 +55,11 @@ public class SalePostService implements SalePostUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SalePostResponse> getList(Long cardId, SaleStatus status, Pageable pageable) {
-        Page<SalePost> posts;
-        if (cardId != null && status != null) {
-            posts = salePostRepository.findByCardIdAndStatus(cardId, status, pageable);
-        } else if (cardId != null) {
-            posts = salePostRepository.findByCardId(cardId, pageable);
-        } else if (status != null) {
-            posts = salePostRepository.findByStatus(status, pageable);
-        } else {
-            posts = salePostRepository.findAll(pageable);
-        }
-        return posts.map(post -> toResponse(post));
+    public Page<SalePostResponse> getList(SaleStatus status, Pageable pageable) {
+        Page<SalePost> posts = status != null
+                ? salePostRepository.findByStatus(status, pageable)
+                : salePostRepository.findAll(pageable);
+        return posts.map(this::toResponse);
     }
 
     @Override
@@ -81,8 +78,10 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
-        salePost.update(request.title(), request.description(), request.price(),
-                request.cardCondition());
+        salePost.update(request.title(), request.description(), request.price());
+
+        salePostItemRepository.deleteBySalePostId(id);
+        saveItems(id, request.items());
 
         salePostImageRepository.deleteBySalePostId(id);
         saveImages(id, request.imageObjectKeys());
@@ -116,8 +115,16 @@ public class SalePostService implements SalePostUseCase {
             throw new ForbiddenException();
         }
         salePost.validateDeletable();
+        salePostItemRepository.deleteBySalePostId(id);
         deleteImages(id);
         salePostRepository.delete(salePost);
+    }
+
+    private void saveItems(Long salePostId, List<SalePostItemRequest> itemRequests) {
+        List<SalePostItem> items = itemRequests.stream()
+                .map(req -> SalePostItem.of(salePostId, req.cardId(), req.cardCondition(), req.quantity()))
+                .toList();
+        salePostItemRepository.saveAll(items);
     }
 
     private void deleteImages(Long salePostId) {
@@ -145,10 +152,14 @@ public class SalePostService implements SalePostUseCase {
     }
 
     private SalePostResponse toResponse(SalePost salePost) {
+        List<SalePostItemResponse> items = salePostItemRepository.findBySalePostId(salePost.getId())
+                .stream()
+                .map(SalePostItemResponse::from)
+                .toList();
         List<String> imageUrls = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())
                 .stream()
                 .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
                 .toList();
-        return SalePostResponse.from(salePost, imageUrls);
+        return SalePostResponse.from(salePost, items, imageUrls);
     }
 }
