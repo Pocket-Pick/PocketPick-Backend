@@ -3,6 +3,7 @@ package com.pocketpick.chat.presentation.websocket;
 import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.chat.application.MessageService;
 import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final String USER_ID_ATTRIBUTE = "userId";
 
     private final WebSocketSessionRegistry sessionRegistry;
+    private final OnlineStatusRepository onlineStatusRepository;
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
 
@@ -26,6 +28,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = extractUserId(session);
         sessionRegistry.register(userId, session);
+        onlineStatusRepository.markOnline(userId);
         log.info("WebSocket connected: userId={}", userId);
     }
 
@@ -40,6 +43,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         Long userId = extractUserId(session);
         sessionRegistry.remove(userId);
+        onlineStatusRepository.markOffline(userId);
         log.info("WebSocket disconnected: userId={}, status={}", userId, status);
     }
 
