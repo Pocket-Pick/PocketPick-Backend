@@ -1,9 +1,13 @@
 package com.pocketpick.chat.presentation.websocket;
 
+import tools.jackson.databind.ObjectMapper;
+import com.pocketpick.chat.application.MessageService;
+import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
@@ -15,12 +19,21 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final String USER_ID_ATTRIBUTE = "userId";
 
     private final WebSocketSessionRegistry sessionRegistry;
+    private final MessageService messageService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = extractUserId(session);
         sessionRegistry.register(userId, session);
         log.info("WebSocket connected: userId={}", userId);
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        Long senderId = extractUserId(session);
+        SendMessageRequest request = objectMapper.readValue(message.getPayload(), SendMessageRequest.class);
+        messageService.send(senderId, request);
     }
 
     @Override
