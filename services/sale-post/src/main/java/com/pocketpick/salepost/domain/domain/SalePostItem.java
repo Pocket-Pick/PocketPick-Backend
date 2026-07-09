@@ -1,0 +1,39 @@
+package com.pocketpick.salepost.domain.domain;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "sale_post_item")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class SalePostItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private Long salePostId;
+
+    @Column(nullable = false)
+    private Long cardId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CardCondition cardCondition;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    public static SalePostItem of(Long salePostId, Long cardId, CardCondition cardCondition, int quantity) {
+        SalePostItem item = new SalePostItem();
+        item.salePostId = salePostId;
+        item.cardId = cardId;
+        item.cardCondition = cardCondition;
+        item.quantity = quantity;
+        return item;
+    }
+}

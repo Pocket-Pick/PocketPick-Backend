@@ -12,15 +12,13 @@ public interface SalePostUseCase {
 
     SalePostResponse create(Long userId, CreateSalePostRequest request);
 
-    Page<SalePostResponse> getSalePostList(Long cardId, SaleStatus status, Pageable pageable);
+    Page<SalePostResponse> getList(SaleStatus status, Pageable pageable);
 
-    SalePostResponse getSalePost(Long id);
+    SalePostResponse getOne(Long id);
 
     SalePostResponse update(Long userId, Long id, UpdateSalePostRequest request);
 
     SalePostResponse updateStatus(Long userId, Long id, UpdateSaleStatusRequest request);
 
     void delete(Long userId, Long id);
-
-    void applyViewCount(Long salePostId, int delta);
 }
