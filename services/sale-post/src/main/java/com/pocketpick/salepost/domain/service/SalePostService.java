@@ -115,6 +115,7 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
+        salePost.validateDeletable();
         deleteImages(id);
         salePostRepository.delete(salePost);
     }

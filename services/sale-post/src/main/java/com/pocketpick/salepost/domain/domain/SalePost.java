@@ -1,6 +1,7 @@
 package com.pocketpick.salepost.domain.domain;
 
 import com.pocketpick.salepost.domain.domain.exception.InvalidStatusTransitionException;
+import com.pocketpick.salepost.domain.domain.exception.ReservedPostException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -63,11 +64,20 @@ public class SalePost {
     }
 
     public void update(String title, String description, int price, CardCondition cardCondition) {
+        if (this.status == SaleStatus.RESERVED) {
+            throw new ReservedPostException();
+        }
         this.title = title;
         this.description = description;
         this.price = price;
         this.cardCondition = cardCondition;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void validateDeletable() {
+        if (this.status == SaleStatus.RESERVED) {
+            throw new ReservedPostException();
+        }
     }
 
     public void updateStatus(SaleStatus newStatus) {
