@@ -1,5 +1,7 @@
 package com.pocketpick.salepost.domain.domain;
 
+import com.pocketpick.salepost.domain.domain.exception.InvalidStatusTransitionException;
+import com.pocketpick.salepost.domain.domain.exception.ReservedPostException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -76,6 +78,9 @@ public class SalePost {
 
     public void update(String title, String description, int price,
                        CardCondition cardCondition, String imageObjectKey) {
+        if (this.status == SaleStatus.RESERVED) {
+            throw new ReservedPostException();
+        }
         if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
         this.title = title;
         this.description = description;
@@ -86,8 +91,17 @@ public class SalePost {
         }
     }
 
-    public void updateStatus(SaleStatus status) {
-        this.status = status;
+    public void validateDeletable() {
+        if (this.status == SaleStatus.RESERVED) {
+            throw new ReservedPostException();
+        }
+    }
+
+    public void updateStatus(SaleStatus newStatus) {
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw new InvalidStatusTransitionException();
+        }
+        this.status = newStatus;
     }
 
     public void incrementViewCount(int delta) {
