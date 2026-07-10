@@ -1,6 +1,6 @@
 package com.pocketpick.chat.presentation.websocket;
 
-import com.pocketpick.chat.application.MessageService;
+import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.MessageType;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
@@ -32,7 +32,7 @@ class ChatWebSocketHandlerTest {
 
     @Mock private WebSocketSessionRegistry sessionRegistry;
     @Mock private OnlineStatusRepository onlineStatusRepository;
-    @Mock private MessageService messageService;
+    @Mock private MessageUseCase messageUseCase;
     @Mock private ObjectMapper objectMapper;
     @Mock private WebSocketSession session;
 
@@ -84,7 +84,7 @@ class ChatWebSocketHandlerTest {
 
             handler.handleMessage(session, new TextMessage(json));
 
-            verify(messageService).send(42L, frame);
+            verify(messageUseCase).send(42L, frame);
         }
 
         @Test
@@ -100,7 +100,7 @@ class ChatWebSocketHandlerTest {
             handler.handleMessage(session, new TextMessage(json));
 
             verify(sessionRegistry).setCurrentRoom(42L, "room-1");
-            verify(messageService).markAsRead("room-1", 42L);
+            verify(messageUseCase).markAsRead("room-1", 42L);
         }
     }
 }
