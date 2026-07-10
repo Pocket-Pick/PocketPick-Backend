@@ -8,6 +8,8 @@ import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.UncheckedIOException;
+
 @Service
 @RequiredArgsConstructor
 public class MessageDeliveryService {
@@ -22,11 +24,15 @@ public class MessageDeliveryService {
         Long receiverId = event.getReceiverId();
 
         if (onlineStatusRepository.isOnline(receiverId)) {
-            webSocketMessageSender.send(receiverId, event);
-
-            sessionRegistry.getCurrentRoom(receiverId)
-                    .filter(roomId -> roomId.equals(event.getRoomId()))
-                    .ifPresent(roomId -> messageService.markAsRead(roomId, receiverId));
+            try {
+                webSocketMessageSender.send(receiverId, event);
+                sessionRegistry.getCurrentRoom(receiverId)
+                        .filter(roomId -> roomId.equals(event.getRoomId()))
+                        .ifPresent(roomId -> messageService.markAsRead(roomId, receiverId));
+            } catch (UncheckedIOException e) {
+                onlineStatusRepository.markOffline(receiverId);
+                fcmPushUseCase.sendPush(receiverId, event.getContent());
+            }
         } else {
             fcmPushUseCase.sendPush(receiverId, event.getContent());
         }

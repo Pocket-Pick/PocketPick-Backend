@@ -3,7 +3,6 @@ package com.pocketpick.chat.infrastructure.websocket;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
 import com.pocketpick.chat.domain.message.dto.ReadEvent;
-import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +11,7 @@ import org.springframework.web.socket.TextMessage;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 @Slf4j
 @Component
@@ -19,7 +19,6 @@ import java.io.IOException;
 public class WebSocketMessageSender {
 
     private final WebSocketSessionRegistry sessionRegistry;
-    private final OnlineStatusRepository onlineStatusRepository;
     private final ObjectMapper objectMapper;
 
     public void send(Long receiverId, ChatMessageEvent event) {
@@ -30,7 +29,7 @@ public class WebSocketMessageSender {
                 session.sendMessage(new TextMessage(payload));
             } catch (IOException e) {
                 log.error("WebSocket push failed: receiverId={}", receiverId, e);
-                onlineStatusRepository.markOffline(receiverId);
+                throw new UncheckedIOException(e);
             }
         });
     }
