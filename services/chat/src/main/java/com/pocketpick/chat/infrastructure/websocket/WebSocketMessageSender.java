@@ -2,6 +2,7 @@ package com.pocketpick.chat.infrastructure.websocket;
 
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
+import com.pocketpick.chat.domain.message.dto.ReadEvent;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,17 @@ public class WebSocketMessageSender {
             } catch (IOException e) {
                 log.error("WebSocket push failed: receiverId={}", receiverId, e);
                 onlineStatusRepository.markOffline(receiverId);
+            }
+        });
+    }
+
+    public void sendReadEvent(Long userId, ReadEvent event) {
+        sessionRegistry.getSession(userId).ifPresent(session -> {
+            try {
+                String payload = objectMapper.writeValueAsString(event);
+                session.sendMessage(new TextMessage(payload));
+            } catch (IOException e) {
+                log.error("WebSocket read event push failed: userId={}", userId, e);
             }
         });
     }

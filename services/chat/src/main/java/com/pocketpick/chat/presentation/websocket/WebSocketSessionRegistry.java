@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class WebSocketSessionRegistry {
 
-    // key: userId, value: WebSocketSession
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<Long, String> currentRooms = new ConcurrentHashMap<>();
 
     public void register(Long userId, WebSocketSession session) {
         sessions.put(userId, session);
@@ -19,6 +19,7 @@ public class WebSocketSessionRegistry {
 
     public void remove(Long userId) {
         sessions.remove(userId);
+        currentRooms.remove(userId);
     }
 
     public Optional<WebSocketSession> getSession(Long userId) {
@@ -28,5 +29,13 @@ public class WebSocketSessionRegistry {
     public boolean isOnline(Long userId) {
         WebSocketSession session = sessions.get(userId);
         return session != null && session.isOpen();
+    }
+
+    public void setCurrentRoom(Long userId, String roomId) {
+        currentRooms.put(userId, roomId);
+    }
+
+    public Optional<String> getCurrentRoom(Long userId) {
+        return Optional.ofNullable(currentRooms.get(userId));
     }
 }

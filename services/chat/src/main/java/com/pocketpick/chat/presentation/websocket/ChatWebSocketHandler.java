@@ -2,7 +2,8 @@ package com.pocketpick.chat.presentation.websocket;
 
 import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.chat.application.MessageService;
-import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +35,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Long senderId = extractUserId(session);
-        SendMessageRequest request = objectMapper.readValue(message.getPayload(), SendMessageRequest.class);
-        messageService.send(senderId, request);
+        Long userId = extractUserId(session);
+        WebSocketFrame frame = objectMapper.readValue(message.getPayload(), WebSocketFrame.class);
+
+        if (frame.getFrameType() == WebSocketFrameType.ENTER_ROOM) {
+            sessionRegistry.setCurrentRoom(userId, frame.getRoomId());
+            messageService.markAsRead(frame.getRoomId(), userId);
+        } else {
+            messageService.send(userId, frame);
+        }
     }
 
     @Override
