@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FcmPushServiceImpl implements FcmPushService {
+public class FcmPushServiceImpl implements FcmPushUseCase {
 
     private final FcmTokenRepository fcmTokenRepository;
 

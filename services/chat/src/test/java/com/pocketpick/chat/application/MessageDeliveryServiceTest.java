@@ -2,7 +2,7 @@ package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.MessageType;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
-import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
+import com.pocketpick.chat.infrastructure.fcm.FcmPushUseCase;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class MessageDeliveryServiceTest {
     private OnlineStatusRepository onlineStatusRepository;
 
     @Mock
-    private FcmPushService fcmPushService;
+    private FcmPushUseCase fcmPushUseCase;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -65,7 +65,7 @@ class MessageDeliveryServiceTest {
 
             // then
             verify(webSocketSession).sendMessage(any());
-            verify(fcmPushService, never()).sendPush(anyLong(), anyString());
+            verify(fcmPushUseCase, never()).sendPush(anyLong(), anyString());
         }
 
         @Test
@@ -79,7 +79,7 @@ class MessageDeliveryServiceTest {
             messageDeliveryService.deliver(event);
 
             // then
-            verify(fcmPushService).sendPush(2L, "안녕하세요");
+            verify(fcmPushUseCase).sendPush(2L, "안녕하세요");
             verify(sessionRegistry, never()).getSession(anyLong());
         }
     }

@@ -2,7 +2,7 @@ package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
-import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
+import com.pocketpick.chat.infrastructure.fcm.FcmPushUseCase;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class MessageDeliveryService {
 
     private final WebSocketSessionRegistry sessionRegistry;
     private final OnlineStatusRepository onlineStatusRepository;
-    private final FcmPushService fcmPushService;
+    private final FcmPushUseCase fcmPushUseCase;
     private final ObjectMapper objectMapper;
 
     public void deliver(ChatMessageEvent event) {
@@ -29,7 +29,7 @@ public class MessageDeliveryService {
         if (onlineStatusRepository.isOnline(receiverId)) {
             sendViaWebSocket(receiverId, event);
         } else {
-            fcmPushService.sendPush(receiverId, event.getContent());
+            fcmPushUseCase.sendPush(receiverId, event.getContent());
         }
     }
 
