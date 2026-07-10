@@ -32,15 +32,15 @@ public class MessageService {
 
         updateLastMessage(request.getRoomId(), request.getContent());
 
-        ChatMessageEvent event = new ChatMessageEvent(
-                saved.getId(),
-                saved.getRoomId(),
-                saved.getSenderId(),
-                request.getReceiverId(),
-                saved.getContent(),
-                saved.getType(),
-                saved.getCreatedAt()
-        );
+        ChatMessageEvent event = ChatMessageEvent.builder()
+                .messageId(saved.getId())
+                .roomId(saved.getRoomId())
+                .senderId(saved.getSenderId())
+                .receiverId(request.getReceiverId())
+                .content(saved.getContent())
+                .type(saved.getType())
+                .createdAt(saved.getCreatedAt())
+                .build();
 
         chatMessageProducer.send(event);
     }
