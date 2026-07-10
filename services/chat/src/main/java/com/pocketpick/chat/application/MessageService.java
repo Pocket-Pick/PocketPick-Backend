@@ -2,6 +2,7 @@ package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.ChatMessage;
 import com.pocketpick.chat.domain.message.ChatMessageRepository;
+import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ReadEvent;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
@@ -16,7 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MessageService {
+public class MessageService implements MessageUseCase {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;

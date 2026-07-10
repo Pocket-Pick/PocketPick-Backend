@@ -1,7 +1,7 @@
 package com.pocketpick.chat.presentation.websocket;
 
 import tools.jackson.databind.ObjectMapper;
-import com.pocketpick.chat.application.MessageService;
+import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
@@ -22,7 +22,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final WebSocketSessionRegistry sessionRegistry;
     private final OnlineStatusRepository onlineStatusRepository;
-    private final MessageService messageService;
+    private final MessageUseCase messageUseCase;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -40,9 +40,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         if (frame.getFrameType() == WebSocketFrameType.ENTER_ROOM) {
             sessionRegistry.setCurrentRoom(userId, frame.getRoomId());
-            messageService.markAsRead(frame.getRoomId(), userId);
+            messageUseCase.markAsRead(frame.getRoomId(), userId);
         } else {
-            messageService.send(userId, frame);
+            messageUseCase.send(userId, frame);
         }
     }
 
