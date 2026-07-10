@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.UncheckedIOException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -76,6 +79,20 @@ class MessageDeliveryServiceTest {
 
             verify(fcmPushUseCase).sendPush(2L, "안녕하세요");
             verify(webSocketMessageSender, never()).send(anyLong(), any());
+        }
+
+        @Test
+        @DisplayName("WebSocket 전송 실패 시 오프라인 처리 후 FCM으로 폴백한다")
+        void deliver_webSocketFails_marksOfflineAndSendsFcm() {
+            ChatMessageEvent event = createEvent(1L, 2L);
+            given(onlineStatusRepository.isOnline(2L)).willReturn(true);
+            willThrow(new UncheckedIOException(new IOException("connection reset")))
+                    .given(webSocketMessageSender).send(2L, event);
+
+            messageDeliveryService.deliver(event);
+
+            verify(onlineStatusRepository).markOffline(2L);
+            verify(fcmPushUseCase).sendPush(2L, "안녕하세요");
         }
     }
 
