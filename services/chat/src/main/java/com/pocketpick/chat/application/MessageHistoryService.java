@@ -15,11 +15,12 @@ import java.util.List;
 public class MessageHistoryService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final ChatMessageRepository chatMessageRepository;
 
     public MessageHistoryResponse getHistory(String roomId, String cursor, int size) {
-        int fetchSize = size <= 0 ? DEFAULT_PAGE_SIZE : size;
+        int fetchSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
         PageRequest pageable = PageRequest.of(0, fetchSize + 1);
 
         List<ChatMessage> messages = cursor == null
