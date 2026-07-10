@@ -4,6 +4,7 @@ dependency-management = "1.1.7"
 querydsl = "5.1.0"
 jwt = "0.12.6"
 firebase-admin = "9.4.3"
+aws-sdk = "2.31.18"
 
 [libraries]
 spring-boot-web = { module = "org.springframework.boot:spring-boot-starter-web" }
@@ -30,6 +31,7 @@ jwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jwt" }
 jwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jwt" }
 jwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jwt" }
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
+aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
