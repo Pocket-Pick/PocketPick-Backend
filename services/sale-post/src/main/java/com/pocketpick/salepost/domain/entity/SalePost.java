@@ -5,10 +5,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SoftDelete;
 
 import java.time.LocalDateTime;
 
 @Entity
+@SoftDelete
 @Table(name = "sale_post")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
