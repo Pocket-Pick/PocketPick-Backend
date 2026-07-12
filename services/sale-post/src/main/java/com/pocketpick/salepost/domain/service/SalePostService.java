@@ -41,7 +41,7 @@ public class SalePostService implements SalePostUseCase {
                 .build();
         SalePost saved = salePostRepository.save(salePost);
 
-        saveImages(saved.getId(), request.imageObjectKeys());
+        saveImages(userId, saved.getId(), request.imageObjectKeys());
 
         return toResponse(saved);
     }
@@ -82,7 +82,7 @@ public class SalePostService implements SalePostUseCase {
                 request.cardCondition());
 
         salePostImageRepository.deleteBySalePostId(id);
-        saveImages(id, request.imageObjectKeys());
+        saveImages(userId, id, request.imageObjectKeys());
 
         return toResponse(salePost);
     }
@@ -101,13 +101,18 @@ public class SalePostService implements SalePostUseCase {
         salePostRepository.delete(salePost);
     }
 
-    private void saveImages(Long salePostId, List<String> tempObjectKeys) {
+    private void saveImages(Long userId, Long salePostId, List<String> tempObjectKeys) {
         if (tempObjectKeys == null || tempObjectKeys.isEmpty()) {
             return;
         }
+        String expectedPrefix = "images/temp/" + userId + "/";
         List<SalePostImage> images = new ArrayList<>();
         for (int i = 0; i < tempObjectKeys.size(); i++) {
-            String postsKey = s3Uploader.promoteToPostsPath(tempObjectKeys.get(i));
+            String tempObjectKey = tempObjectKeys.get(i);
+            if (tempObjectKey == null || !tempObjectKey.startsWith(expectedPrefix)) {
+                throw new ForbiddenException();
+            }
+            String postsKey = s3Uploader.promoteToPostsPath(tempObjectKey);
             images.add(SalePostImage.of(salePostId, postsKey, i));
         }
         salePostImageRepository.saveAll(images);
