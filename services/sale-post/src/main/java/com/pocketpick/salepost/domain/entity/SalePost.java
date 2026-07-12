@@ -5,11 +5,15 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sale_post")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SalePost {
@@ -44,9 +48,11 @@ public class SalePost {
     @Column(length = 500)
     private String imageObjectKey;
 
+    @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -62,8 +68,6 @@ public class SalePost {
         this.cardCondition = cardCondition;
         this.imageObjectKey = imageObjectKey;
         this.status = SaleStatus.ON_SALE;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void update(String title, String description, int price,
@@ -76,12 +80,10 @@ public class SalePost {
         if (imageObjectKey != null) {
             this.imageObjectKey = imageObjectKey;
         }
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void updateStatus(SaleStatus status) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public boolean isOwner(Long userId) {
