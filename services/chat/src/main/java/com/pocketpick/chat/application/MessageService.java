@@ -45,9 +45,6 @@ public class MessageService {
     }
 
     private void updateLastMessage(String roomId, String content) {
-        chatRoomRepository.findById(roomId).ifPresent(room -> {
-            room.updateLastMessage(content);
-            chatRoomRepository.save(room);
-        });
+        chatRoomRepository.updateLastMessage(roomId, content);
     }
 }
