@@ -25,9 +25,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        Long userId = extractUserId(session);
-        sessionRegistry.remove(userId);
-        log.info("WebSocket disconnected: userId={}, status={}", userId, status);
+        Object userIdAttr = session.getAttributes().get(USER_ID_ATTRIBUTE);
+        if (userIdAttr == null) return;
+        try {
+            Long userId = Long.parseLong(userIdAttr.toString());
+            sessionRegistry.remove(userId, session);
+            log.info("WebSocket disconnected: userId={}, status={}", userId, status);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid userId on disconnect: {}", userIdAttr);
+        }
     }
 
     private Long extractUserId(WebSocketSession session) {
@@ -35,6 +41,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (userId == null) {
             throw new IllegalStateException("userId not found in WebSocket session attributes");
         }
-        return Long.parseLong(userId.toString());
+        try {
+            return Long.parseLong(userId.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("userId is not a valid number: " + userId);
+        }
     }
 }
