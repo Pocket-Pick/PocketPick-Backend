@@ -4,29 +4,33 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class WebSocketSessionRegistry {
 
-    // key: userId, value: WebSocketSession
-    private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    // key: userId, value: 해당 유저의 모든 WebSocketSession
+    private final Map<Long, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
     public void register(Long userId, WebSocketSession session) {
-        sessions.put(userId, session);
+        sessions.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(session);
     }
 
-    public void remove(Long userId) {
-        sessions.remove(userId);
+    public void remove(Long userId, WebSocketSession session) {
+        sessions.computeIfPresent(userId, (k, set) -> {
+            set.remove(session);
+            return set.isEmpty() ? null : set;
+        });
     }
 
-    public Optional<WebSocketSession> getSession(Long userId) {
-        return Optional.ofNullable(sessions.get(userId));
+    public Set<WebSocketSession> getSessions(Long userId) {
+        return sessions.getOrDefault(userId, Set.of());
     }
 
     public boolean isOnline(Long userId) {
-        WebSocketSession session = sessions.get(userId);
-        return session != null && session.isOpen();
+        return sessions.getOrDefault(userId, Set.of())
+                .stream()
+                .anyMatch(WebSocketSession::isOpen);
     }
 }
