@@ -40,7 +40,8 @@ public class MessageDeliveryService {
                 String payload = objectMapper.writeValueAsString(response);
                 session.sendMessage(new TextMessage(payload));
             } catch (IOException e) {
-                log.error("WebSocket push failed: receiverId={}", receiverId, e);
+                log.error("WebSocket push failed, fallback to FCM: receiverId={}", receiverId, e);
+                fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
             }
         });
     }
