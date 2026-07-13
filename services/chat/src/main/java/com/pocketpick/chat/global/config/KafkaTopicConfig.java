@@ -1,22 +1,24 @@
 package com.pocketpick.chat.global.config;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
+@RequiredArgsConstructor
 public class KafkaTopicConfig {
 
     public static final String CHAT_MESSAGE_TOPIC = "chat.message";
-    private static final int PARTITION_COUNT = 3;
-    private static final int REPLICATION_FACTOR = 1;
+
+    private final KafkaTopicProperties kafkaTopicProperties;
 
     @Bean
     public NewTopic chatMessageTopic() {
         return TopicBuilder.name(CHAT_MESSAGE_TOPIC)
-                .partitions(PARTITION_COUNT)
-                .replicas(REPLICATION_FACTOR)
+                .partitions(kafkaTopicProperties.getPartitions())
+                .replicas(kafkaTopicProperties.getReplicas())
                 .build();
     }
 }

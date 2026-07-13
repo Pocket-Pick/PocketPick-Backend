@@ -20,5 +20,11 @@ spring:
       properties:
         spring.json.trusted.packages: "com.pocketpick.chat.*"
 
+kafka:
+  topic:
+    chat-message:
+      partitions: ${KAFKA_TOPIC_CHAT_MESSAGE_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_CHAT_MESSAGE_REPLICAS:1}
+
 server:
   port: ${SERVER_PORT:8084}
