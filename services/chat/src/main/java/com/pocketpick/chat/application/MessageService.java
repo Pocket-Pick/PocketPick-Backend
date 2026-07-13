@@ -4,10 +4,9 @@ import com.pocketpick.chat.domain.message.ChatMessage;
 import com.pocketpick.chat.domain.message.ChatMessageRepository;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
-import com.pocketpick.chat.domain.room.ChatRoom;
 import com.pocketpick.chat.domain.room.ChatRoomRepository;
-import com.pocketpick.chat.infrastructure.kafka.ChatMessageProducer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +16,7 @@ public class MessageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageProducer chatMessageProducer;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void send(Long senderId, SendMessageRequest request) {
@@ -42,7 +41,7 @@ public class MessageService {
                 saved.getCreatedAt()
         );
 
-        chatMessageProducer.send(event);
+        eventPublisher.publishEvent(event);
     }
 
     private void updateLastMessage(String roomId, String content) {
