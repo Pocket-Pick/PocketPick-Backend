@@ -4,16 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.concurrent.TimeUnit;
+
 @Repository
 @RequiredArgsConstructor
 public class OnlineStatusRepository {
 
     private static final String KEY_PREFIX = "user:online:";
+    private static final long TTL_MINUTES = 30;
 
     private final StringRedisTemplate redisTemplate;
 
     public void markOnline(Long userId) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + userId, "1");
+        redisTemplate.opsForValue().set(KEY_PREFIX + userId, "1", TTL_MINUTES, TimeUnit.MINUTES);
     }
 
     public void markOffline(Long userId) {
