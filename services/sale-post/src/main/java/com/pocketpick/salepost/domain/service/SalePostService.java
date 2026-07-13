@@ -27,6 +27,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +64,18 @@ public class SalePostService implements SalePostUseCase {
         Page<SalePost> posts = status != null
                 ? salePostRepository.findByStatus(status, pageable)
                 : salePostRepository.findAll(pageable);
-        return posts.map(this::toResponse);
+
+        List<Long> postIds = posts.map(SalePost::getId).toList();
+
+        Map<Long, List<SalePostItem>> itemMap = salePostItemRepository
+                .findBySalePostIdIn(postIds).stream()
+                .collect(groupingBy(SalePostItem::getSalePostId));
+
+        Map<Long, List<SalePostImage>> imageMap = salePostImageRepository
+                .findBySalePostIdInOrderBySortOrder(postIds).stream()
+                .collect(groupingBy(SalePostImage::getSalePostId));
+
+        return posts.map(post -> toResponse(post, itemMap, imageMap));
     }
 
     @Override
@@ -191,5 +205,19 @@ public class SalePostService implements SalePostUseCase {
                 .toList();
         int viewCount = (int) (salePost.getViewCount() + viewCountRepository.get(salePostId));
         return SalePostResponse.from(salePost, items, imageUrls, viewCount);
+    }
+
+    private SalePostResponse toResponse(SalePost salePost,
+            Map<Long, List<SalePostItem>> itemMap,
+            Map<Long, List<SalePostImage>> imageMap) {
+        List<SalePostItemResponse> items = itemMap.getOrDefault(salePost.getId(), List.of())
+                .stream()
+                .map(SalePostItemResponse::from)
+                .toList();
+        List<String> imageUrls = imageMap.getOrDefault(salePost.getId(), List.of())
+                .stream()
+                .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
+                .toList();
+        return SalePostResponse.from(salePost, items, imageUrls);
     }
 }

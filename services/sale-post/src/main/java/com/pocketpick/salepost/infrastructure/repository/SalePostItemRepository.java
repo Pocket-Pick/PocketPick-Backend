@@ -9,5 +9,7 @@ public interface SalePostItemRepository extends JpaRepository<SalePostItem, Long
 
     List<SalePostItem> findBySalePostId(Long salePostId);
 
+    List<SalePostItem> findBySalePostIdIn(List<Long> salePostIds);
+
     void deleteBySalePostId(Long salePostId);
 }

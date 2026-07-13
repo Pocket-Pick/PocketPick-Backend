@@ -9,5 +9,7 @@ public interface SalePostImageRepository extends JpaRepository<SalePostImage, Lo
 
     List<SalePostImage> findBySalePostIdOrderBySortOrder(Long salePostId);
 
+    List<SalePostImage> findBySalePostIdInOrderBySortOrder(List<Long> salePostIds);
+
     void deleteBySalePostId(Long salePostId);
 }
