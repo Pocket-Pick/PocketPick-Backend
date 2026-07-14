@@ -36,6 +36,15 @@ public class FcmPushService implements FcmPushUseCase {
             FirebaseMessaging.getInstance().send(message);
         } catch (FirebaseMessagingException e) {
             log.error("FCM push failed: userId={}", request.getUserId(), e);
+            if (isInvalidToken(e)) {
+                fcmTokenRepository.delete(request.getUserId());
+                log.info("FCM token deleted due to invalid token: userId={}", request.getUserId());
+            }
         }
+    }
+
+    private boolean isInvalidToken(FirebaseMessagingException e) {
+        String errorCode = e.getMessagingErrorCode() != null ? e.getMessagingErrorCode().name() : "";
+        return errorCode.equals("UNREGISTERED") || errorCode.equals("INVALID_ARGUMENT");
     }
 }
