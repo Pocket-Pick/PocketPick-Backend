@@ -25,10 +25,15 @@ public class MessageDeliveryService {
 
         if (onlineStatusRepository.isOnline(receiverId)) {
             try {
-                webSocketMessageSender.send(receiverId, event);
-                sessionRegistry.getCurrentRoom(receiverId)
-                        .filter(roomId -> roomId.equals(event.getRoomId()))
-                        .ifPresent(roomId -> messageService.markAsRead(roomId, receiverId));
+                boolean sent = webSocketMessageSender.send(receiverId, event);
+                if (sent) {
+                    sessionRegistry.getCurrentRoom(receiverId)
+                            .filter(roomId -> roomId.equals(event.getRoomId()))
+                            .ifPresent(roomId -> messageService.markAsRead(roomId, receiverId));
+                } else {
+                    onlineStatusRepository.markOffline(receiverId);
+                    fcmPushUseCase.sendPush(receiverId, event.getContent());
+                }
             } catch (UncheckedIOException e) {
                 onlineStatusRepository.markOffline(receiverId);
                 fcmPushUseCase.sendPush(receiverId, event.getContent());
