@@ -7,6 +7,7 @@ import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -25,11 +26,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final MessageUseCase messageUseCase;
     private final ObjectMapper objectMapper;
 
+    @Value("${chat.server.ip}")
+    private String serverIp;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = extractUserId(session);
         sessionRegistry.register(userId, session);
-        onlineStatusRepository.markOnline(userId);
+        onlineStatusRepository.markOnline(userId, serverIp);
         log.info("WebSocket connected: userId={}", userId);
     }
 

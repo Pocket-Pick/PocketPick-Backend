@@ -10,13 +10,13 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class OnlineStatusRepository {
 
-    private static final String KEY_PREFIX = "user:online:";
+    private static final String KEY_PREFIX = "user:server:";
     private static final long TTL_MINUTES = 30;
 
     private final StringRedisTemplate redisTemplate;
 
-    public void markOnline(Long userId) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + userId, "1", TTL_MINUTES, TimeUnit.MINUTES);
+    public void markOnline(Long userId, String serverIp) {
+        redisTemplate.opsForValue().set(KEY_PREFIX + userId, serverIp, TTL_MINUTES, TimeUnit.MINUTES);
     }
 
     public void markOffline(Long userId) {
@@ -25,5 +25,9 @@ public class OnlineStatusRepository {
 
     public boolean isOnline(Long userId) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + userId));
+    }
+
+    public String getServerIp(Long userId) {
+        return redisTemplate.opsForValue().get(KEY_PREFIX + userId);
     }
 }
