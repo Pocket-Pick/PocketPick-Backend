@@ -2,12 +2,12 @@ package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
+import com.pocketpick.chat.global.config.ChatServerProperties;
 import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.socket.TextMessage;
@@ -25,12 +25,7 @@ public class MessageDeliveryService {
     private final FcmPushService fcmPushService;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
-
-    @Value("${server.port}")
-    private int serverPort;
-
-    @Value("${chat.server.ip}")
-    private String serverIp;
+    private final ChatServerProperties chatServerProperties;
 
     public void deliver(ChatMessageEvent event) {
         Long receiverId = event.getReceiverId();
@@ -70,7 +65,7 @@ public class MessageDeliveryService {
 
         try {
             restClient.post()
-                    .uri("http://" + targetIp + ":" + serverPort + "/internal/messages/deliver")
+                    .uri("http://" + targetIp + ":" + chatServerProperties.getPort() + "/internal/messages/deliver")
                     .body(event)
                     .retrieve()
                     .toBodilessEntity();
