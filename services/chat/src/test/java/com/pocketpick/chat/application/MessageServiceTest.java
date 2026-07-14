@@ -17,13 +17,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @DisplayName("MessageService")
@@ -34,6 +39,7 @@ class MessageServiceTest {
     @Mock private ChatRoomRepository chatRoomRepository;
     @Mock private ChatMessageProducer chatMessageProducer;
     @Mock private WebSocketMessageSender webSocketMessageSender;
+    @Mock private MongoTemplate mongoTemplate;
 
     @InjectMocks
     private MessageService messageService;
@@ -89,31 +95,31 @@ class MessageServiceTest {
     class MarkAsRead {
 
         @Test
-        @DisplayName("미읽음 메시지가 있으면 readAt을 업데이트하고 발신자에게 READ 이벤트를 전송한다")
+        @DisplayName("미읽음 메시지가 있으면 벌크 업데이트 후 발신자에게 READ 이벤트를 전송한다")
         void markAsRead_unreadExists_updatesAndNotifiesSender() {
             ChatMessage unread = ChatMessage.builder()
                     .roomId("room-1").senderId(2L)
                     .content("안녕").type(MessageType.TEXT).build();
 
-            given(chatMessageRepository.findByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
-                    .willReturn(List.of(unread));
+            given(chatMessageRepository.findTop1ByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
+                    .willReturn(Optional.of(unread));
 
             messageService.markAsRead("room-1", 1L);
 
-            verify(chatMessageRepository).saveAll(any());
+            verify(mongoTemplate).updateMulti(any(Query.class), any(Update.class), eq("messages"));
             verify(webSocketMessageSender).sendReadEvent(any(), any());
         }
 
         @Test
         @DisplayName("미읽음 메시지가 없으면 아무것도 하지 않는다")
         void markAsRead_noUnread_doesNothing() {
-            given(chatMessageRepository.findByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
-                    .willReturn(List.of());
+            given(chatMessageRepository.findTop1ByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
+                    .willReturn(Optional.empty());
 
             messageService.markAsRead("room-1", 1L);
 
-            verify(chatMessageRepository, org.mockito.Mockito.never()).saveAll(any());
-            verify(webSocketMessageSender, org.mockito.Mockito.never()).sendReadEvent(any(), any());
+            verify(mongoTemplate, never()).updateMulti(any(), any(), anyString());
+            verify(webSocketMessageSender, never()).sendReadEvent(any(), any());
         }
     }
 

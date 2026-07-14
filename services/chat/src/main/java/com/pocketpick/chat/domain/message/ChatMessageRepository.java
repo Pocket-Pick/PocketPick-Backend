@@ -3,6 +3,7 @@ package com.pocketpick.chat.domain.message;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
 
@@ -12,5 +13,5 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
 
     List<ChatMessage> findByRoomIdOrderByIdDesc(String roomId, org.springframework.data.domain.Pageable pageable);
 
-    List<ChatMessage> findByRoomIdAndSenderIdNotAndReadAtIsNull(String roomId, Long readerId);
+    Optional<ChatMessage> findTop1ByRoomIdAndSenderIdNotAndReadAtIsNull(String roomId, Long readerId);
 }
