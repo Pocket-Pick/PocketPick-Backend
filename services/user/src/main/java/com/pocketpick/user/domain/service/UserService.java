@@ -10,10 +10,11 @@ import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
+import com.pocketpick.user.domain.event.FcmTokenRegisteredEvent;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
-import com.pocketpick.user.infrastructure.redis.FcmTokenRedisRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,7 @@ public class UserService implements UserUseCase {
     private final OutboxEventRepository outboxEventRepository;
     private final AuthServiceClient authServiceClient;
     private final PasswordEncoder passwordEncoder;
-    private final FcmTokenRedisRepository fcmTokenRedisRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -78,6 +79,6 @@ public class UserService implements UserUseCase {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         user.updateFcmToken(request.fcmToken());
-        fcmTokenRedisRepository.save(userId, request.fcmToken());
+        eventPublisher.publishEvent(new FcmTokenRegisteredEvent(userId, request.fcmToken()));
     }
 }
