@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import tools.jackson.databind.ObjectMapper;
 
+import org.springframework.web.socket.WebSocketSession;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -21,17 +24,20 @@ public class WebSocketMessageSender {
     private final WebSocketSessionRegistry sessionRegistry;
     private final ObjectMapper objectMapper;
 
-    public void send(Long receiverId, ChatMessageEvent event) {
-        sessionRegistry.getSession(receiverId).ifPresent(session -> {
-            try {
-                ChatMessageResponse response = ChatMessageResponse.from(event);
-                String payload = objectMapper.writeValueAsString(response);
-                session.sendMessage(new TextMessage(payload));
-            } catch (IOException e) {
-                log.error("WebSocket push failed: receiverId={}", receiverId, e);
-                throw new UncheckedIOException(e);
-            }
-        });
+    public boolean send(Long receiverId, ChatMessageEvent event) {
+        Optional<WebSocketSession> sessionOpt = sessionRegistry.getSession(receiverId);
+        if (sessionOpt.isEmpty()) {
+            return false;
+        }
+        try {
+            ChatMessageResponse response = ChatMessageResponse.from(event);
+            String payload = objectMapper.writeValueAsString(response);
+            sessionOpt.get().sendMessage(new TextMessage(payload));
+            return true;
+        } catch (IOException e) {
+            log.error("WebSocket push failed: receiverId={}", receiverId, e);
+            throw new UncheckedIOException(e);
+        }
     }
 
     public void sendReadEvent(Long userId, ReadEvent event) {

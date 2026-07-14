@@ -49,6 +49,7 @@ class MessageDeliveryServiceTest {
         void deliver_receiverOnline_sendsViaWebSocket() {
             ChatMessageEvent event = createEvent(1L, 2L);
             given(onlineStatusRepository.isOnline(2L)).willReturn(true);
+            given(webSocketMessageSender.send(2L, event)).willReturn(true);
             given(sessionRegistry.getCurrentRoom(2L)).willReturn(Optional.empty());
 
             messageDeliveryService.deliver(event);
@@ -62,6 +63,7 @@ class MessageDeliveryServiceTest {
         void deliver_receiverOnlineInSameRoom_marksAsRead() {
             ChatMessageEvent event = createEvent(1L, 2L);
             given(onlineStatusRepository.isOnline(2L)).willReturn(true);
+            given(webSocketMessageSender.send(2L, event)).willReturn(true);
             given(sessionRegistry.getCurrentRoom(2L)).willReturn(Optional.of("room-1"));
 
             messageDeliveryService.deliver(event);
@@ -88,6 +90,19 @@ class MessageDeliveryServiceTest {
             given(onlineStatusRepository.isOnline(2L)).willReturn(true);
             willThrow(new UncheckedIOException(new IOException("connection reset")))
                     .given(webSocketMessageSender).send(2L, event);
+
+            messageDeliveryService.deliver(event);
+
+            verify(onlineStatusRepository).markOffline(2L);
+            verify(fcmPushUseCase).sendPush(2L, "안녕하세요");
+        }
+
+        @Test
+        @DisplayName("온라인 상태지만 WebSocket 세션이 없으면 오프라인 처리 후 FCM으로 폴백한다")
+        void deliver_onlineButNoSession_marksOfflineAndSendsFcm() {
+            ChatMessageEvent event = createEvent(1L, 2L);
+            given(onlineStatusRepository.isOnline(2L)).willReturn(true);
+            given(webSocketMessageSender.send(2L, event)).willReturn(false);
 
             messageDeliveryService.deliver(event);
 
