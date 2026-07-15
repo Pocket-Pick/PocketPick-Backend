@@ -4,9 +4,10 @@ import com.pocketpick.chat.domain.message.ChatMessage;
 import com.pocketpick.chat.domain.message.ChatMessageRepository;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.domain.outbox.OutboxEvent;
+import com.pocketpick.chat.domain.outbox.OutboxEventRepository;
 import com.pocketpick.chat.domain.room.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ public class MessageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final OutboxEventRepository outboxEventRepository;
 
     @Transactional
     public void send(Long senderId, SendMessageRequest request) {
@@ -41,7 +42,7 @@ public class MessageService {
                 saved.getCreatedAt()
         );
 
-        eventPublisher.publishEvent(event);
+        outboxEventRepository.save(OutboxEvent.from(event));
     }
 
     private void updateLastMessage(String roomId, String content) {
