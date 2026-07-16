@@ -27,6 +27,11 @@ public class ViewCountRepository {
         return redisTemplate.keys(KEY_PREFIX + "*");
     }
 
+    public Long getAndDelete(Long salePostId) {
+        Long value = redisTemplate.opsForValue().getAndDelete(KEY_PREFIX + salePostId);
+        return value != null ? value : 0L;
+    }
+
     public void delete(Long salePostId) {
         redisTemplate.delete(KEY_PREFIX + salePostId);
     }

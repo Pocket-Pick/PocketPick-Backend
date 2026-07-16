@@ -26,10 +26,9 @@ public class ViewCountFlusher {
         }
         for (String key : keys) {
             Long salePostId = viewCountRepository.extractSalePostId(key);
-            Long delta = viewCountRepository.get(salePostId);
-            if (delta != null && delta > 0) {
+            Long delta = viewCountRepository.getAndDelete(salePostId);
+            if (delta > 0) {
                 salePostRepository.incrementViewCount(salePostId, delta.intValue());
-                viewCountRepository.delete(salePostId);
                 log.debug("viewCount flushed: salePostId={}, delta={}", salePostId, delta);
             }
         }
