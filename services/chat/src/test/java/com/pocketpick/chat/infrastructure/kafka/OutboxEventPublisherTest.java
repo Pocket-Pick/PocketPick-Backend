@@ -17,9 +17,11 @@ import org.springframework.kafka.support.SendResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -37,13 +39,13 @@ class OutboxEventPublisherTest {
     private OutboxEventPublisher outboxEventPublisher;
 
     @Nested
-    @DisplayName("PENDING 이벤트 재발행")
+    @DisplayName("PENDING 이벤트 발행")
     class PublishPendingEvents {
 
         @Test
         @DisplayName("PENDING 없으면 Kafka produce 호출하지 않는다")
         void publishPendingEvents_noPending_doesNotProduce() {
-            given(outboxEventRepository.findByStatus(OutboxStatus.PENDING)).willReturn(List.of());
+            given(outboxEventRepository.findAndMarkProcessing()).willReturn(Optional.empty());
 
             outboxEventPublisher.publishPendingEvents();
 
@@ -51,30 +53,63 @@ class OutboxEventPublisherTest {
         }
 
         @Test
-        @DisplayName("PENDING 있으면 Kafka produce 후 PUBLISHED로 업데이트한다")
+        @DisplayName("PENDING 선점 성공 시 Kafka produce 후 PUBLISHED로 업데이트한다")
         void publishPendingEvents_hasPending_producesAndMarksPublished() {
             OutboxEvent outboxEvent = buildOutboxEvent();
-            given(outboxEventRepository.findByStatus(OutboxStatus.PENDING)).willReturn(List.of(outboxEvent));
+            given(outboxEventRepository.findAndMarkProcessing()).willReturn(Optional.of(outboxEvent));
             given(kafkaTemplate.send(anyString(), anyString(), any(ChatMessageEvent.class)))
                     .willReturn(CompletableFuture.completedFuture(new SendResult<>(null, null)));
 
             outboxEventPublisher.publishPendingEvents();
 
             verify(outboxEventRepository).save(outboxEvent);
+            assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
         }
 
         @Test
-        @DisplayName("Kafka 또 실패하면 PENDING 상태 유지한다")
-        void publishPendingEvents_kafkaFails_keepsPending() {
+        @DisplayName("Kafka produce 실패 시 PENDING으로 복구한다")
+        void publishPendingEvents_kafkaFails_marksPending() {
             OutboxEvent outboxEvent = buildOutboxEvent();
             CompletableFuture<SendResult<String, ChatMessageEvent>> failedFuture = new CompletableFuture<>();
             failedFuture.completeExceptionally(new ExecutionException("Kafka down", new RuntimeException()));
 
-            given(outboxEventRepository.findByStatus(OutboxStatus.PENDING)).willReturn(List.of(outboxEvent));
+            given(outboxEventRepository.findAndMarkProcessing()).willReturn(Optional.of(outboxEvent));
             given(kafkaTemplate.send(anyString(), anyString(), any(ChatMessageEvent.class)))
                     .willReturn(failedFuture);
 
             outboxEventPublisher.publishPendingEvents();
+
+            verify(outboxEventRepository).save(outboxEvent);
+            assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PENDING);
+        }
+    }
+
+    @Nested
+    @DisplayName("Stuck 이벤트 복구")
+    class RecoverStuckEvents {
+
+        @Test
+        @DisplayName("30초 이상 PROCESSING 상태인 이벤트를 PENDING으로 복구한다")
+        void recoverStuckEvents_stuckExists_marksPending() {
+            OutboxEvent stuckEvent = buildOutboxEvent();
+            given(outboxEventRepository.findByStatusAndProcessingAtBefore(
+                    any(OutboxStatus.class), any(LocalDateTime.class)))
+                    .willReturn(List.of(stuckEvent));
+
+            outboxEventPublisher.recoverStuckEvents();
+
+            verify(outboxEventRepository).save(stuckEvent);
+            assertThat(stuckEvent.getStatus()).isEqualTo(OutboxStatus.PENDING);
+        }
+
+        @Test
+        @DisplayName("Stuck 이벤트 없으면 아무것도 하지 않는다")
+        void recoverStuckEvents_noStuck_doesNothing() {
+            given(outboxEventRepository.findByStatusAndProcessingAtBefore(
+                    any(OutboxStatus.class), any(LocalDateTime.class)))
+                    .willReturn(List.of());
+
+            outboxEventPublisher.recoverStuckEvents();
 
             verify(outboxEventRepository, never()).save(any());
         }

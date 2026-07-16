@@ -26,6 +26,8 @@ public class OutboxEvent {
     @Indexed
     private OutboxStatus status;
 
+    private LocalDateTime processingAt;
+
     @Builder
     private OutboxEvent(String roomId, Long senderId, Long receiverId,
                         String content, MessageType type, LocalDateTime createdAt) {
@@ -49,7 +51,17 @@ public class OutboxEvent {
                 .build();
     }
 
+    public void markAsProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+        this.processingAt = LocalDateTime.now();
+    }
+
     public void markAsPublished() {
         this.status = OutboxStatus.PUBLISHED;
+    }
+
+    public void markAsPending() {
+        this.status = OutboxStatus.PENDING;
+        this.processingAt = null;
     }
 }
