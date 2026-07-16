@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -18,7 +17,6 @@ public class ViewCountFlusher {
     private final SalePostRepository salePostRepository;
 
     @Scheduled(fixedDelay = 60_000)
-    @Transactional
     public void flush() {
         Set<String> keys = viewCountRepository.getAllKeys();
         if (keys == null || keys.isEmpty()) {
@@ -27,9 +25,19 @@ public class ViewCountFlusher {
         for (String key : keys) {
             Long salePostId = viewCountRepository.extractSalePostId(key);
             Long delta = viewCountRepository.getAndDelete(salePostId);
-            if (delta > 0) {
+            if (delta <= 0) {
+                continue;
+            }
+            try {
                 salePostRepository.incrementViewCount(salePostId, delta.intValue());
                 log.debug("viewCount flushed: salePostId={}, delta={}", salePostId, delta);
+            } catch (Exception e) {
+                log.error("viewCount flush 실패, Redis 복구 시도: salePostId={}, delta={}", salePostId, delta, e);
+                try {
+                    viewCountRepository.increment(salePostId, delta);
+                } catch (Exception redisEx) {
+                    log.error("Redis 보상 실패, 조회수 유실 발생: salePostId={}, delta={}", salePostId, delta, redisEx);
+                }
             }
         }
     }
