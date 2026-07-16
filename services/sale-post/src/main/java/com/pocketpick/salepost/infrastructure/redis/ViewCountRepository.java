@@ -18,6 +18,10 @@ public class ViewCountRepository {
         redisTemplate.opsForValue().increment(KEY_PREFIX + salePostId);
     }
 
+    public void increment(Long salePostId, Long delta) {
+        redisTemplate.opsForValue().increment(KEY_PREFIX + salePostId, delta);
+    }
+
     public Long get(Long salePostId) {
         Long value = redisTemplate.opsForValue().get(KEY_PREFIX + salePostId);
         return value != null ? value : 0L;
