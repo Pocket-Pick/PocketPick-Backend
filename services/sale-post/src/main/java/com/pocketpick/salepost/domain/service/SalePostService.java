@@ -124,6 +124,12 @@ public class SalePostService implements SalePostUseCase {
         salePostRepository.delete(salePost);
     }
 
+    @Override
+    @Transactional
+    public void applyViewCount(Long salePostId, int delta) {
+        salePostRepository.incrementViewCount(salePostId, delta);
+    }
+
     private void saveImages(Long salePostId, List<String> tempObjectKeys) {
         if (tempObjectKeys == null || tempObjectKeys.isEmpty()) {
             return;

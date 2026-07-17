@@ -21,4 +21,6 @@ public interface SalePostUseCase {
     SalePostResponse updateStatus(Long userId, Long id, UpdateSaleStatusRequest request);
 
     void delete(Long userId, Long id);
+
+    void applyViewCount(Long salePostId, int delta);
 }
