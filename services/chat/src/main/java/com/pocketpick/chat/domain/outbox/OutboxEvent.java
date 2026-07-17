@@ -16,6 +16,7 @@ public class OutboxEvent {
 
     @Id
     private String id;
+    private String messageId;
     private String roomId;
     private Long senderId;
     private Long receiverId;
@@ -29,8 +30,9 @@ public class OutboxEvent {
     private LocalDateTime processingAt;
 
     @Builder
-    private OutboxEvent(String roomId, Long senderId, Long receiverId,
+    private OutboxEvent(String messageId, String roomId, Long senderId, Long receiverId,
                         String content, MessageType type, LocalDateTime createdAt) {
+        this.messageId = messageId;
         this.roomId = roomId;
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -42,6 +44,7 @@ public class OutboxEvent {
 
     public static OutboxEvent from(ChatMessageEvent event) {
         return OutboxEvent.builder()
+                .messageId(event.getMessageId())
                 .roomId(event.getRoomId())
                 .senderId(event.getSenderId())
                 .receiverId(event.getReceiverId())

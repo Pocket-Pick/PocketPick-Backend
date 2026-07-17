@@ -69,7 +69,7 @@ public class OutboxEventPublisher {
 
     private ChatMessageEvent toChatMessageEvent(OutboxEvent outboxEvent) {
         return new ChatMessageEvent(
-                null,
+                outboxEvent.getMessageId(),
                 outboxEvent.getRoomId(),
                 outboxEvent.getSenderId(),
                 outboxEvent.getReceiverId(),
