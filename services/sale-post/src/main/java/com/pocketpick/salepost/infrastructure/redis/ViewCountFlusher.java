@@ -1,6 +1,6 @@
 package com.pocketpick.salepost.infrastructure.redis;
 
-import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
+import com.pocketpick.salepost.domain.service.SalePostUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +14,7 @@ import java.util.Set;
 public class ViewCountFlusher {
 
     private final ViewCountRepository viewCountRepository;
-    private final SalePostRepository salePostRepository;
+    private final SalePostUseCase salePostUseCase;
 
     @Scheduled(fixedDelay = 60_000)
     public void flush() {
@@ -29,7 +29,7 @@ public class ViewCountFlusher {
                 continue;
             }
             try {
-                salePostRepository.incrementViewCount(salePostId, delta.intValue());
+                salePostUseCase.applyViewCount(salePostId, delta.intValue());
                 log.debug("viewCount flushed: salePostId={}, delta={}", salePostId, delta);
             } catch (Exception e) {
                 log.error("viewCount flush 실패, Redis 복구 시도: salePostId={}, delta={}", salePostId, delta, e);
