@@ -1,15 +1,16 @@
 package com.pocketpick.chat.domain.message.dto;
 
 import com.pocketpick.chat.domain.message.MessageType;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class SendMessageRequest {
+public class WebSocketFrame {
 
+    private WebSocketFrameType frameType;
     private String roomId;
     private Long receiverId;
     private String content;

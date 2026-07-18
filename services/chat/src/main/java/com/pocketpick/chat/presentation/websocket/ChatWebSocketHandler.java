@@ -1,8 +1,10 @@
 package com.pocketpick.chat.presentation.websocket;
 
 import tools.jackson.databind.ObjectMapper;
-import com.pocketpick.chat.application.MessageService;
-import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.domain.message.MessageUseCase;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
+import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,34 +21,37 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final String USER_ID_ATTRIBUTE = "userId";
 
     private final WebSocketSessionRegistry sessionRegistry;
-    private final MessageService messageService;
+    private final OnlineStatusRepository onlineStatusRepository;
+    private final MessageUseCase messageUseCase;
     private final ObjectMapper objectMapper;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = extractUserId(session);
         sessionRegistry.register(userId, session);
+        onlineStatusRepository.markOnline(userId);
         log.info("WebSocket connected: userId={}", userId);
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Long senderId = extractUserId(session);
-        SendMessageRequest request = objectMapper.readValue(message.getPayload(), SendMessageRequest.class);
-        messageService.send(senderId, request);
+        Long userId = extractUserId(session);
+        WebSocketFrame frame = objectMapper.readValue(message.getPayload(), WebSocketFrame.class);
+
+        if (frame.getFrameType() == WebSocketFrameType.ENTER_ROOM) {
+            sessionRegistry.setCurrentRoom(userId, frame.getRoomId());
+            messageUseCase.markAsRead(frame.getRoomId(), userId);
+        } else {
+            messageUseCase.send(userId, frame);
+        }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        Object userIdAttr = session.getAttributes().get(USER_ID_ATTRIBUTE);
-        if (userIdAttr == null) return;
-        try {
-            Long userId = Long.parseLong(userIdAttr.toString());
-            sessionRegistry.remove(userId, session);
-            log.info("WebSocket disconnected: userId={}, status={}", userId, status);
-        } catch (NumberFormatException e) {
-            log.warn("Invalid userId on disconnect: {}", userIdAttr);
-        }
+        Long userId = extractUserId(session);
+        sessionRegistry.remove(userId);
+        onlineStatusRepository.markOffline(userId);
+        log.info("WebSocket disconnected: userId={}, status={}", userId, status);
     }
 
     private Long extractUserId(WebSocketSession session) {
@@ -54,10 +59,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (userId == null) {
             throw new IllegalStateException("userId not found in WebSocket session attributes");
         }
-        try {
-            return Long.parseLong(userId.toString());
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("userId is not a valid number: " + userId);
-        }
+        return Long.parseLong(userId.toString());
     }
 }

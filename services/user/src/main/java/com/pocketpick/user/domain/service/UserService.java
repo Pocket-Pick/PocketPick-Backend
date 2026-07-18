@@ -13,6 +13,7 @@ import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.event.FcmTokenRegisteredEvent;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
+import com.pocketpick.user.infrastructure.redis.FcmTokenRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +28,7 @@ public class UserService implements UserUseCase {
     private final OutboxEventRepository outboxEventRepository;
     private final AuthServiceClient authServiceClient;
     private final PasswordEncoder passwordEncoder;
-    private final ApplicationEventPublisher eventPublisher;
+    private final FcmTokenRedisRepository fcmTokenRedisRepository;
 
     @Override
     @Transactional
@@ -79,6 +80,6 @@ public class UserService implements UserUseCase {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         user.updateFcmToken(request.fcmToken());
-        eventPublisher.publishEvent(new FcmTokenRegisteredEvent(userId, request.fcmToken()));
+        fcmTokenRedisRepository.save(userId, request.fcmToken());
     }
 }

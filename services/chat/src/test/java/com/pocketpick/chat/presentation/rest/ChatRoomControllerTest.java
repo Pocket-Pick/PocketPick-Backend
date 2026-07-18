@@ -82,7 +82,7 @@ class ChatRoomControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidBody))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
         }
     }
 

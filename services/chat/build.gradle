@@ -10,6 +10,7 @@ dependencies {
     implementation libs.spring.boot.redis
     implementation libs.spring.kafka
     implementation libs.firebase.admin
+    implementation libs.aws.s3
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok

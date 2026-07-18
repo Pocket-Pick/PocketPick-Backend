@@ -1,8 +1,9 @@
 package com.pocketpick.chat.presentation.websocket;
 
-import com.pocketpick.chat.application.MessageService;
+import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.MessageType;
-import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,20 +30,11 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class ChatWebSocketHandlerTest {
 
-    @Mock
-    private WebSocketSessionRegistry sessionRegistry;
-
-    @Mock
-    private OnlineStatusRepository onlineStatusRepository;
-
-    @Mock
-    private MessageService messageService;
-
-    @Mock
-    private ObjectMapper objectMapper;
-
-    @Mock
-    private WebSocketSession session;
+    @Mock private WebSocketSessionRegistry sessionRegistry;
+    @Mock private OnlineStatusRepository onlineStatusRepository;
+    @Mock private MessageUseCase messageUseCase;
+    @Mock private ObjectMapper objectMapper;
+    @Mock private WebSocketSession session;
 
     @InjectMocks
     private ChatWebSocketHandler handler;
@@ -62,10 +54,8 @@ class ChatWebSocketHandlerTest {
         @Test
         @DisplayName("연결 시 세션 등록과 Redis 온라인 표시를 한다")
         void afterConnectionEstablished_registersSessionAndMarksOnline() {
-            // when
             handler.afterConnectionEstablished(session);
 
-            // then
             verify(sessionRegistry).register(42L, session);
             verify(onlineStatusRepository).markOnline(42L);
         }
@@ -73,10 +63,8 @@ class ChatWebSocketHandlerTest {
         @Test
         @DisplayName("해제 시 세션 제거와 Redis 오프라인 표시를 한다")
         void afterConnectionClosed_removesSessionAndMarksOffline() {
-            // when
             handler.afterConnectionClosed(session, CloseStatus.NORMAL);
 
-            // then
             verify(sessionRegistry).remove(42L);
             verify(onlineStatusRepository).markOffline(42L);
         }
@@ -87,18 +75,32 @@ class ChatWebSocketHandlerTest {
     class MessageHandling {
 
         @Test
-        @DisplayName("텍스트 메시지 수신 시 MessageService로 위임한다")
-        void handleTextMessage_delegatesToMessageService() throws Exception {
-            // given
-            String json = "{\"roomId\":\"room-1\",\"receiverId\":2,\"content\":\"안녕\",\"type\":\"TEXT\"}";
-            SendMessageRequest request = new SendMessageRequest("room-1", 2L, "안녕", MessageType.TEXT);
-            given(objectMapper.readValue(eq(json), eq(SendMessageRequest.class))).willReturn(request);
+        @DisplayName("MESSAGE 프레임이면 MessageService.send()로 위임한다")
+        void handleTextMessage_messageFrame_delegatesToSend() throws Exception {
+            String json = "{\"frameType\":\"MESSAGE\",\"roomId\":\"room-1\",\"receiverId\":2,\"content\":\"안녕\",\"type\":\"TEXT\"}";
+            WebSocketFrame frame = new WebSocketFrame();
 
-            // when
+            given(objectMapper.readValue(eq(json), eq(WebSocketFrame.class))).willReturn(frame);
+
             handler.handleMessage(session, new TextMessage(json));
 
-            // then
-            verify(messageService).send(42L, request);
+            verify(messageUseCase).send(42L, frame);
+        }
+
+        @Test
+        @DisplayName("ENTER_ROOM 프레임이면 currentRoom 세팅 후 읽음 처리를 한다")
+        void handleTextMessage_enterRoomFrame_setsCurrentRoomAndMarksAsRead() throws Exception {
+            String json = "{\"frameType\":\"ENTER_ROOM\",\"roomId\":\"room-1\"}";
+            WebSocketFrame frame = new WebSocketFrame();
+            frame.setFrameType(WebSocketFrameType.ENTER_ROOM);
+            frame.setRoomId("room-1");
+
+            given(objectMapper.readValue(eq(json), eq(WebSocketFrame.class))).willReturn(frame);
+
+            handler.handleMessage(session, new TextMessage(json));
+
+            verify(sessionRegistry).setCurrentRoom(42L, "room-1");
+            verify(messageUseCase).markAsRead("room-1", 42L);
         }
     }
 }

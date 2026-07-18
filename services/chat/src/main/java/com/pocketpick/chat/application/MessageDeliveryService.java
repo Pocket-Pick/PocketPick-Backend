@@ -1,48 +1,40 @@
 package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
-import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
-import com.pocketpick.chat.infrastructure.fcm.FcmPushRequest;
-import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
+import com.pocketpick.chat.infrastructure.fcm.FcmPushUseCase;
+import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
+import com.pocketpick.chat.infrastructure.websocket.WebSocketMessageSender;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
+import java.io.UncheckedIOException;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageDeliveryService {
 
+    private final WebSocketMessageSender webSocketMessageSender;
     private final WebSocketSessionRegistry sessionRegistry;
-    private final FcmPushService fcmPushService;
-    private final ObjectMapper objectMapper;
+    private final OnlineStatusRepository onlineStatusRepository;
+    private final FcmPushUseCase fcmPushUseCase;
+    private final MessageService messageService;
 
     public void deliver(ChatMessageEvent event) {
         Long receiverId = event.getReceiverId();
 
-        if (sessionRegistry.isOnline(receiverId)) {
-            sendViaWebSocket(receiverId, event);
-        } else {
-            fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
-        }
-    }
-
-    private void sendViaWebSocket(Long receiverId, ChatMessageEvent event) {
-        sessionRegistry.getSession(receiverId).ifPresent(session -> {
+        if (onlineStatusRepository.isOnline(receiverId)) {
             try {
-                ChatMessageResponse response = ChatMessageResponse.from(event);
-                String payload = objectMapper.writeValueAsString(response);
-                session.sendMessage(new TextMessage(payload));
-            } catch (IOException e) {
-                log.error("WebSocket push failed, fallback to FCM: receiverId={}", receiverId, e);
-                fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
+                webSocketMessageSender.send(receiverId, event);
+                sessionRegistry.getCurrentRoom(receiverId)
+                        .filter(roomId -> roomId.equals(event.getRoomId()))
+                        .ifPresent(roomId -> messageService.markAsRead(roomId, receiverId));
+            } catch (UncheckedIOException e) {
+                onlineStatusRepository.markOffline(receiverId);
+                fcmPushUseCase.sendPush(receiverId, event.getContent());
             }
-        });
+        } else {
+            fcmPushUseCase.sendPush(receiverId, event.getContent());
+        }
     }
 }
