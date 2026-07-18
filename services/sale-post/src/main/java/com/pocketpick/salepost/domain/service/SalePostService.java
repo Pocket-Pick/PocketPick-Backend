@@ -16,6 +16,7 @@ import com.pocketpick.salepost.infrastructure.redis.ViewCountRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostItemRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
+import com.pocketpick.salepost.infrastructure.repository.SalePostSpec;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -61,9 +62,7 @@ public class SalePostService implements SalePostUseCase {
     @Override
     @Transactional(readOnly = true)
     public Page<SalePostResponse> getList(SaleStatus status, Pageable pageable) {
-        Page<SalePost> posts = status != null
-                ? salePostRepository.findByStatus(status, pageable)
-                : salePostRepository.findAll(pageable);
+        Page<SalePost> posts = salePostRepository.findAll(SalePostSpec.filter(null, status), pageable);
 
         List<Long> postIds = posts.map(SalePost::getId).toList();
 
