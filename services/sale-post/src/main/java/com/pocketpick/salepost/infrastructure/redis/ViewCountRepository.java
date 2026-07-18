@@ -18,6 +18,10 @@ public class ViewCountRepository {
         redisTemplate.opsForValue().increment(KEY_PREFIX + salePostId);
     }
 
+    public void increment(Long salePostId, Long delta) {
+        redisTemplate.opsForValue().increment(KEY_PREFIX + salePostId, delta);
+    }
+
     public Long get(Long salePostId) {
         Long value = redisTemplate.opsForValue().get(KEY_PREFIX + salePostId);
         return value != null ? value : 0L;
@@ -25,6 +29,11 @@ public class ViewCountRepository {
 
     public Set<String> getAllKeys() {
         return redisTemplate.keys(KEY_PREFIX + "*");
+    }
+
+    public Long getAndDelete(Long salePostId) {
+        Long value = redisTemplate.opsForValue().getAndDelete(KEY_PREFIX + salePostId);
+        return value != null ? value : 0L;
     }
 
     public void delete(Long salePostId) {
