@@ -48,6 +48,9 @@ public class SalePost {
     @Column(length = 500)
     private String imageObjectKey;
 
+    @Column(nullable = false)
+    private int viewCount;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -68,6 +71,7 @@ public class SalePost {
         this.cardCondition = cardCondition;
         this.imageObjectKey = imageObjectKey;
         this.status = SaleStatus.ON_SALE;
+        this.viewCount = 0;
     }
 
     public void update(String title, String description, int price,
@@ -84,6 +88,10 @@ public class SalePost {
 
     public void updateStatus(SaleStatus status) {
         this.status = status;
+    }
+
+    public void incrementViewCount(int delta) {
+        this.viewCount += delta;
     }
 
     public boolean isOwner(Long userId) {
