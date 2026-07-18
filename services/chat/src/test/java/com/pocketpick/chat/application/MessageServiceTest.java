@@ -3,10 +3,12 @@ package com.pocketpick.chat.application;
 import com.pocketpick.chat.domain.message.ChatMessage;
 import com.pocketpick.chat.domain.message.ChatMessageRepository;
 import com.pocketpick.chat.domain.message.MessageType;
-import com.pocketpick.chat.domain.message.dto.SendMessageRequest;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
+import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
 import com.pocketpick.chat.domain.room.ChatRoom;
 import com.pocketpick.chat.domain.room.ChatRoomRepository;
 import com.pocketpick.chat.infrastructure.kafka.ChatMessageProducer;
+import com.pocketpick.chat.infrastructure.websocket.WebSocketMessageSender;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,14 +30,10 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
 
-    @Mock
-    private ChatMessageRepository chatMessageRepository;
-
-    @Mock
-    private ChatRoomRepository chatRoomRepository;
-
-    @Mock
-    private ChatMessageProducer chatMessageProducer;
+    @Mock private ChatMessageRepository chatMessageRepository;
+    @Mock private ChatRoomRepository chatRoomRepository;
+    @Mock private ChatMessageProducer chatMessageProducer;
+    @Mock private WebSocketMessageSender webSocketMessageSender;
 
     @InjectMocks
     private MessageService messageService;
@@ -46,24 +45,18 @@ class MessageServiceTest {
         @Test
         @DisplayName("메시지를 MongoDB에 저장하고 Kafka로 발행한다")
         void send_validRequest_savesAndProducesToKafka() {
-            // given
             Long senderId = 1L;
-            SendMessageRequest request = new SendMessageRequest("room-1", 2L, "안녕하세요", MessageType.TEXT);
+            WebSocketFrame frame = buildMessageFrame("room-1", 2L, "안녕하세요");
 
             ChatMessage saved = ChatMessage.builder()
-                    .roomId("room-1")
-                    .senderId(senderId)
-                    .content("안녕하세요")
-                    .type(MessageType.TEXT)
-                    .build();
+                    .roomId("room-1").senderId(senderId)
+                    .content("안녕하세요").type(MessageType.TEXT).build();
 
             given(chatMessageRepository.save(any())).willReturn(saved);
             given(chatRoomRepository.findById("room-1")).willReturn(Optional.empty());
 
-            // when
-            messageService.send(senderId, request);
+            messageService.send(senderId, frame);
 
-            // then
             verify(chatMessageRepository).save(any());
             verify(chatMessageProducer).send(any());
         }
@@ -71,33 +64,66 @@ class MessageServiceTest {
         @Test
         @DisplayName("채팅방이 존재하면 마지막 메시지를 갱신한다")
         void send_roomExists_updatesLastMessage() {
-            // given
             Long senderId = 1L;
-            SendMessageRequest request = new SendMessageRequest("room-1", 2L, "새 메시지", MessageType.TEXT);
+            WebSocketFrame frame = buildMessageFrame("room-1", 2L, "새 메시지");
 
             ChatMessage saved = ChatMessage.builder()
-                    .roomId("room-1")
-                    .senderId(senderId)
-                    .content("새 메시지")
-                    .type(MessageType.TEXT)
-                    .build();
+                    .roomId("room-1").senderId(senderId)
+                    .content("새 메시지").type(MessageType.TEXT).build();
 
-            ChatRoom room = ChatRoom.builder()
-                    .buyerId(1L)
-                    .sellerId(2L)
-                    .salePostId(10L)
-                    .build();
+            ChatRoom room = ChatRoom.builder().buyerId(1L).sellerId(2L).salePostId(10L).build();
 
             given(chatMessageRepository.save(any())).willReturn(saved);
             given(chatRoomRepository.findById("room-1")).willReturn(Optional.of(room));
 
-            // when
-            messageService.send(senderId, request);
+            messageService.send(senderId, frame);
 
-            // then
             ArgumentCaptor<ChatRoom> captor = ArgumentCaptor.forClass(ChatRoom.class);
             verify(chatRoomRepository).save(captor.capture());
             assertThat(captor.getValue().getLastMessage()).isEqualTo("새 메시지");
         }
+    }
+
+    @Nested
+    @DisplayName("읽음 처리")
+    class MarkAsRead {
+
+        @Test
+        @DisplayName("미읽음 메시지가 있으면 readAt을 업데이트하고 발신자에게 READ 이벤트를 전송한다")
+        void markAsRead_unreadExists_updatesAndNotifiesSender() {
+            ChatMessage unread = ChatMessage.builder()
+                    .roomId("room-1").senderId(2L)
+                    .content("안녕").type(MessageType.TEXT).build();
+
+            given(chatMessageRepository.findByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
+                    .willReturn(List.of(unread));
+
+            messageService.markAsRead("room-1", 1L);
+
+            verify(chatMessageRepository).saveAll(any());
+            verify(webSocketMessageSender).sendReadEvent(any(), any());
+        }
+
+        @Test
+        @DisplayName("미읽음 메시지가 없으면 아무것도 하지 않는다")
+        void markAsRead_noUnread_doesNothing() {
+            given(chatMessageRepository.findByRoomIdAndSenderIdNotAndReadAtIsNull("room-1", 1L))
+                    .willReturn(List.of());
+
+            messageService.markAsRead("room-1", 1L);
+
+            verify(chatMessageRepository, org.mockito.Mockito.never()).saveAll(any());
+            verify(webSocketMessageSender, org.mockito.Mockito.never()).sendReadEvent(any(), any());
+        }
+    }
+
+    private WebSocketFrame buildMessageFrame(String roomId, Long receiverId, String content) {
+        WebSocketFrame frame = new WebSocketFrame();
+        frame.setFrameType(WebSocketFrameType.MESSAGE);
+        frame.setRoomId(roomId);
+        frame.setReceiverId(receiverId);
+        frame.setContent(content);
+        frame.setType(MessageType.TEXT);
+        return frame;
     }
 }

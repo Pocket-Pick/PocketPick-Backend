@@ -20,11 +20,17 @@ spring:
       properties:
         spring.json.trusted.packages: "com.pocketpick.chat.*"
 
-kafka:
-  topic:
-    chat-message:
-      partitions: ${KAFKA_TOPIC_CHAT_MESSAGE_PARTITIONS:3}
-      replicas: ${KAFKA_TOPIC_CHAT_MESSAGE_REPLICAS:1}
+firebase:
+  service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION:ap-northeast-2}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
 
 server:
   port: ${SERVER_PORT:8084}

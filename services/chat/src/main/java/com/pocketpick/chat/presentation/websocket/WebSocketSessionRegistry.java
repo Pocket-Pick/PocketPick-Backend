@@ -4,33 +4,38 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class WebSocketSessionRegistry {
 
-    // key: userId, value: 해당 유저의 모든 WebSocketSession
-    private final Map<Long, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
+    private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<Long, String> currentRooms = new ConcurrentHashMap<>();
 
     public void register(Long userId, WebSocketSession session) {
-        sessions.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(session);
+        sessions.put(userId, session);
     }
 
-    public void remove(Long userId, WebSocketSession session) {
-        sessions.computeIfPresent(userId, (k, set) -> {
-            set.remove(session);
-            return set.isEmpty() ? null : set;
-        });
+    public void remove(Long userId) {
+        sessions.remove(userId);
+        currentRooms.remove(userId);
     }
 
-    public Set<WebSocketSession> getSessions(Long userId) {
-        return sessions.getOrDefault(userId, Set.of());
+    public Optional<WebSocketSession> getSession(Long userId) {
+        return Optional.ofNullable(sessions.get(userId));
     }
 
     public boolean isOnline(Long userId) {
-        return sessions.getOrDefault(userId, Set.of())
-                .stream()
-                .anyMatch(WebSocketSession::isOpen);
+        WebSocketSession session = sessions.get(userId);
+        return session != null && session.isOpen();
+    }
+
+    public void setCurrentRoom(Long userId, String roomId) {
+        currentRooms.put(userId, roomId);
+    }
+
+    public Optional<String> getCurrentRoom(Long userId) {
+        return Optional.ofNullable(currentRooms.get(userId));
     }
 }

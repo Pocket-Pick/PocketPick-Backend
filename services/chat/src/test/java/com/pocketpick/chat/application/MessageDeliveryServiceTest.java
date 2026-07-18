@@ -2,8 +2,9 @@ package com.pocketpick.chat.application;
 
 import com.pocketpick.chat.domain.message.MessageType;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
-import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
+import com.pocketpick.chat.infrastructure.fcm.FcmPushUseCase;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
+import com.pocketpick.chat.infrastructure.websocket.WebSocketMessageSender;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,8 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.socket.WebSocketSession;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.UncheckedIOException;
 import java.io.IOException;
@@ -32,20 +31,11 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class MessageDeliveryServiceTest {
 
-    @Mock
-    private WebSocketSessionRegistry sessionRegistry;
-
-    @Mock
-    private OnlineStatusRepository onlineStatusRepository;
-
-    @Mock
-    private FcmPushService fcmPushService;
-
-    @Mock
-    private ObjectMapper objectMapper;
-
-    @Mock
-    private WebSocketSession webSocketSession;
+    @Mock private WebSocketMessageSender webSocketMessageSender;
+    @Mock private WebSocketSessionRegistry sessionRegistry;
+    @Mock private OnlineStatusRepository onlineStatusRepository;
+    @Mock private FcmPushUseCase fcmPushUseCase;
+    @Mock private MessageService messageService;
 
     @InjectMocks
     private MessageDeliveryService messageDeliveryService;
@@ -56,34 +46,39 @@ class MessageDeliveryServiceTest {
 
         @Test
         @DisplayName("수신자가 온라인이면 WebSocket으로 전달한다")
-        void deliver_receiverOnline_sendsViaWebSocket() throws Exception {
-            // given
+        void deliver_receiverOnline_sendsViaWebSocket() {
             ChatMessageEvent event = createEvent(1L, 2L);
             given(onlineStatusRepository.isOnline(2L)).willReturn(true);
-            given(sessionRegistry.getSession(2L)).willReturn(Optional.of(webSocketSession));
-            given(objectMapper.writeValueAsString(any())).willReturn("{\"messageId\":\"1\"}");
+            given(sessionRegistry.getCurrentRoom(2L)).willReturn(Optional.empty());
 
-            // when
             messageDeliveryService.deliver(event);
 
-            // then
-            verify(webSocketSession).sendMessage(any());
-            verify(fcmPushService, never()).sendPush(anyLong(), anyString());
+            verify(webSocketMessageSender).send(2L, event);
+            verify(fcmPushUseCase, never()).sendPush(anyLong(), anyString());
+        }
+
+        @Test
+        @DisplayName("수신자가 온라인이고 같은 방에 있으면 즉시 읽음 처리한다")
+        void deliver_receiverOnlineInSameRoom_marksAsRead() {
+            ChatMessageEvent event = createEvent(1L, 2L);
+            given(onlineStatusRepository.isOnline(2L)).willReturn(true);
+            given(sessionRegistry.getCurrentRoom(2L)).willReturn(Optional.of("room-1"));
+
+            messageDeliveryService.deliver(event);
+
+            verify(messageService).markAsRead("room-1", 2L);
         }
 
         @Test
         @DisplayName("수신자가 오프라인이면 FCM으로 전달한다")
-        void deliver_receiverOffline_sendsVisFcm() {
-            // given
+        void deliver_receiverOffline_sendsFcm() {
             ChatMessageEvent event = createEvent(1L, 2L);
             given(onlineStatusRepository.isOnline(2L)).willReturn(false);
 
-            // when
             messageDeliveryService.deliver(event);
 
-            // then
-            verify(fcmPushService).sendPush(2L, "안녕하세요");
-            verify(sessionRegistry, never()).getSession(anyLong());
+            verify(fcmPushUseCase).sendPush(2L, "안녕하세요");
+            verify(webSocketMessageSender, never()).send(anyLong(), any());
         }
 
         @Test
@@ -102,6 +97,14 @@ class MessageDeliveryServiceTest {
     }
 
     private ChatMessageEvent createEvent(Long senderId, Long receiverId) {
-        return new ChatMessageEvent("msg-1", "room-1", senderId, receiverId, "안녕하세요", MessageType.TEXT, LocalDateTime.now());
+        return ChatMessageEvent.builder()
+                .messageId("msg-1")
+                .roomId("room-1")
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .content("안녕하세요")
+                .type(MessageType.TEXT)
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 }

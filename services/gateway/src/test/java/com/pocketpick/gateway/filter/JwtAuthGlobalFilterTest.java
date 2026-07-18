@@ -43,13 +43,11 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("로그인 경로는 토큰 없이 통과한다")
         void filter_loginPath_passesWithoutToken() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.post("/auth/login").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -59,13 +57,11 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("토큰 재발급 경로는 토큰 없이 통과한다")
         void filter_reissuePath_passesWithoutToken() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.post("/auth/reissue").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -75,13 +71,11 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("회원가입 경로는 토큰 없이 통과한다")
         void filter_signupPath_passesWithoutToken() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.post("/users").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -91,13 +85,25 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("카드 조회 경로는 토큰 없이 통과한다")
         void filter_cardsPath_passesWithoutToken() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.get("/cards").build()
             );
             given(filterChain.filter(any())).willReturn(Mono.empty());
 
-            // when & then
+            StepVerifier.create(filter.filter(exchange, filterChain))
+                    .verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isNull();
+        }
+
+        @Test
+        @DisplayName("WebSocket 채팅 경로는 토큰 없이 통과한다")
+        void filter_wsChatPath_passesWithoutToken() {
+            MockServerWebExchange exchange = MockServerWebExchange.from(
+                    MockServerHttpRequest.get("/ws/chat").build()
+            );
+            given(filterChain.filter(any())).willReturn(Mono.empty());
+
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -112,12 +118,10 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("accessToken 쿠키가 없으면 401을 반환한다")
         void filter_noToken_returns401() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.get("/users/1").build()
             );
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -127,7 +131,6 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("유효하지 않은 토큰이면 401을 반환한다")
         void filter_invalidToken_returns401() {
-            // given
             MockServerWebExchange exchange = MockServerWebExchange.from(
                     MockServerHttpRequest.get("/users/1")
                             .cookie(new HttpCookie("accessToken", "invalid-token"))
@@ -135,7 +138,6 @@ class JwtAuthGlobalFilterTest {
             );
             given(jwtProvider.getUserId("invalid-token")).willThrow(new JwtException("invalid"));
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
 
@@ -145,7 +147,6 @@ class JwtAuthGlobalFilterTest {
         @Test
         @DisplayName("유효한 토큰이면 X-User-Id 헤더를 추가하고 통과한다")
         void filter_validToken_addsUserIdHeaderAndPasses() {
-            // given
             given(jwtProvider.getUserId("valid-token")).willReturn(1L);
             given(filterChain.filter(any())).willAnswer(invocation -> {
                 ServerWebExchange mutatedExchange = invocation.getArgument(0);
@@ -159,9 +160,39 @@ class JwtAuthGlobalFilterTest {
                             .build()
             );
 
-            // when & then
             StepVerifier.create(filter.filter(exchange, filterChain))
                     .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("채팅 REST API 경로는 토큰이 없으면 401을 반환한다")
+        void filter_chatRestPath_noToken_returns401() {
+            MockServerWebExchange exchange = MockServerWebExchange.from(
+                    MockServerHttpRequest.get("/chat/rooms").build()
+            );
+
+            StepVerifier.create(filter.filter(exchange, filterChain))
+                    .verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        @DisplayName("채팅 REST API 경로는 유효한 토큰이면 통과한다")
+        void filter_chatRestPath_validToken_passes() {
+            given(jwtProvider.getUserId("valid-token")).willReturn(1L);
+            given(filterChain.filter(any())).willReturn(Mono.empty());
+
+            MockServerWebExchange exchange = MockServerWebExchange.from(
+                    MockServerHttpRequest.get("/chat/rooms")
+                            .cookie(new HttpCookie("accessToken", "valid-token"))
+                            .build()
+            );
+
+            StepVerifier.create(filter.filter(exchange, filterChain))
+                    .verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isNull();
         }
     }
 }

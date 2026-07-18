@@ -27,7 +27,8 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/users"
     );
     private static final List<String> WHITE_LIST_PREFIX = List.of(
-            "/cards"
+            "/cards",
+            "/ws/chat"
     );
 
     private final JwtProvider jwtProvider;
