@@ -18,7 +18,7 @@ public record CardSummaryResponse(
         String imageSmallUrl,
         List<PokemonType> types
 ) {
-    public static CardSummaryResponse from(Card card) {
+    public static CardSummaryResponse from(Card card, List<PokemonType> types) {
         return new CardSummaryResponse(
                 card.getId(),
                 card.getName(),
@@ -28,7 +28,7 @@ public record CardSummaryResponse(
                 card.getSetId(),
                 card.getNumber(),
                 card.getImageSmallUrl(),
-                card.getTypes().stream().map(t -> t.getType()).toList()
+                types
         );
     }
 }

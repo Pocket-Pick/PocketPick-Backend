@@ -56,7 +56,7 @@ class CardSearchControllerTest {
         @DisplayName("조건 없이 요청하면 200을 반환한다")
         void searchCards_noParams_returns200() throws Exception {
             // given
-            CardSummaryResponse response = CardSummaryResponse.from(CardFixture.card());
+            CardSummaryResponse response = CardSummaryResponse.from(CardFixture.card(), List.of());
             given(cardUseCase.searchCards(any(CardSearchRequest.class), any(Pageable.class)))
                     .willReturn(new PageImpl<>(List.of(response)));
 
@@ -71,7 +71,7 @@ class CardSearchControllerTest {
         @DisplayName("카드명 파라미터로 요청하면 200을 반환한다")
         void searchCards_withName_returns200() throws Exception {
             // given
-            CardSummaryResponse response = CardSummaryResponse.from(CardFixture.card());
+            CardSummaryResponse response = CardSummaryResponse.from(CardFixture.card(), List.of());
             given(cardUseCase.searchCards(any(CardSearchRequest.class), any(Pageable.class)))
                     .willReturn(new PageImpl<>(List.of(response)));
 
