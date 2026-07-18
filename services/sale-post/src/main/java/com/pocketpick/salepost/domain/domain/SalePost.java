@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @SoftDelete
-@Table(name = "sale_post")
+@Table(name = "sale_post", indexes = {
+        @Index(name = "idx_card_id_status", columnList = "card_id, status")
+})
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
