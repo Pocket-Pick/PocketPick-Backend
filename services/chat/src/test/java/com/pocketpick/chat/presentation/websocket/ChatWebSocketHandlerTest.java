@@ -4,6 +4,7 @@ import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.MessageType;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
+import com.pocketpick.chat.global.config.ChatServerProperties;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,7 @@ class ChatWebSocketHandlerTest {
     @Mock private OnlineStatusRepository onlineStatusRepository;
     @Mock private MessageUseCase messageUseCase;
     @Mock private ObjectMapper objectMapper;
+    @Mock private ChatServerProperties chatServerProperties;
     @Mock private WebSocketSession session;
 
     @InjectMocks
@@ -54,10 +56,12 @@ class ChatWebSocketHandlerTest {
         @Test
         @DisplayName("연결 시 세션 등록과 Redis 온라인 표시를 한다")
         void afterConnectionEstablished_registersSessionAndMarksOnline() {
+            given(chatServerProperties.getIp()).willReturn("127.0.0.1");
+
             handler.afterConnectionEstablished(session);
 
             verify(sessionRegistry).register(42L, session);
-            verify(onlineStatusRepository).markOnline(42L);
+            verify(onlineStatusRepository).markOnline(42L, "127.0.0.1");
         }
 
         @Test

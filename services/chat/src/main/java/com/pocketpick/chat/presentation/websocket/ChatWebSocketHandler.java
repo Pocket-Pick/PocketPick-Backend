@@ -4,6 +4,7 @@ import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.chat.domain.message.MessageUseCase;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrame;
 import com.pocketpick.chat.domain.message.dto.WebSocketFrameType;
+import com.pocketpick.chat.global.config.ChatServerProperties;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +25,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final OnlineStatusRepository onlineStatusRepository;
     private final MessageUseCase messageUseCase;
     private final ObjectMapper objectMapper;
+    private final ChatServerProperties chatServerProperties;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = extractUserId(session);
         sessionRegistry.register(userId, session);
-        onlineStatusRepository.markOnline(userId);
+        onlineStatusRepository.markOnline(userId, chatServerProperties.getIp());
         log.info("WebSocket connected: userId={}", userId);
     }
 
