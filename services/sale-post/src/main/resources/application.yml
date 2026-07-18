@@ -5,6 +5,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+    web:
+      pageable:
+        max-page-size: 50
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
