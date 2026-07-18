@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation libs.spring.boot.web
     implementation libs.spring.boot.websocket
     implementation libs.spring.boot.mongodb
     implementation libs.spring.boot.redis
