@@ -2,7 +2,6 @@ package com.pocketpick.auth.domain.service;
 
 import com.pocketpick.auth.domain.domain.Account;
 import com.pocketpick.auth.domain.domain.exception.AccountNotFoundException;
-import com.pocketpick.auth.domain.domain.exception.InvalidPasswordException;
 import com.pocketpick.auth.domain.domain.exception.MissingTokenException;
 import com.pocketpick.auth.domain.dto.LoginRequest;
 import com.pocketpick.auth.domain.repository.AccountRepository;
