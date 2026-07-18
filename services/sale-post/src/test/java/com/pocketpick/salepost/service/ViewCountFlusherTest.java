@@ -1,8 +1,8 @@
 package com.pocketpick.salepost.service;
 
+import com.pocketpick.salepost.domain.service.SalePostUseCase;
 import com.pocketpick.salepost.infrastructure.redis.ViewCountFlusher;
 import com.pocketpick.salepost.infrastructure.redis.ViewCountRepository;
-import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,7 @@ class ViewCountFlusherTest {
     private ViewCountRepository viewCountRepository;
 
     @Mock
-    private SalePostRepository salePostRepository;
+    private SalePostUseCase salePostUseCase;
 
     @InjectMocks
     private ViewCountFlusher viewCountFlusher;
@@ -35,17 +35,16 @@ class ViewCountFlusherTest {
         given(viewCountRepository.getAllKeys()).willReturn(Set.of("sale-post:view:1", "sale-post:view:2"));
         given(viewCountRepository.extractSalePostId("sale-post:view:1")).willReturn(1L);
         given(viewCountRepository.extractSalePostId("sale-post:view:2")).willReturn(2L);
-        given(viewCountRepository.get(1L)).willReturn(5L);
-        given(viewCountRepository.get(2L)).willReturn(3L);
+        given(viewCountRepository.getAndDelete(1L)).willReturn(5L);
+        given(viewCountRepository.getAndDelete(2L)).willReturn(3L);
 
         // when
         viewCountFlusher.flush();
 
         // then
-        then(salePostRepository).should().incrementViewCount(1L, 5);
-        then(viewCountRepository).should().delete(1L);
-        then(salePostRepository).should().incrementViewCount(2L, 3);
-        then(viewCountRepository).should().delete(2L);
+        then(salePostUseCase).should().applyViewCount(1L, 5);
+        then(viewCountRepository).shouldHaveNoMoreInteractions();
+        then(salePostUseCase).should().applyViewCount(2L, 3);
     }
 
     @Test
@@ -58,6 +57,6 @@ class ViewCountFlusherTest {
         viewCountFlusher.flush();
 
         // then
-        then(salePostRepository).shouldHaveNoInteractions();
+        then(salePostUseCase).shouldHaveNoInteractions();
     }
 }

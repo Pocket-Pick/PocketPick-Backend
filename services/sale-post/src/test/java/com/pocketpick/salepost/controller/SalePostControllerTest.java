@@ -60,7 +60,7 @@ class SalePostControllerTest {
 
     private SalePostResponse sampleResponse() {
         return new SalePostResponse(
-                1L, 1L, "카드 팝니다", "상태 좋아요", 10000,
+                1L, 1L, "카드 팝니다", "상태 좋아요", 10000, 0,
                 SaleStatus.ON_SALE,
                 List.of(new SalePostItemResponse(1L, CardCondition.MINT, 1)),
                 List.of("https://bucket.s3.amazonaws.com/images/posts/1/uuid.jpg"),

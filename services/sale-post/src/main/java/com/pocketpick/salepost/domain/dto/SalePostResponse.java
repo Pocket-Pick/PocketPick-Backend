@@ -12,6 +12,7 @@ public record SalePostResponse(
         String title,
         String description,
         int price,
+        int viewCount,
         SaleStatus status,
         List<SalePostItemResponse> items,
         List<String> imageUrls,
@@ -26,6 +27,23 @@ public record SalePostResponse(
                 salePost.getTitle(),
                 salePost.getDescription(),
                 salePost.getPrice(),
+                salePost.getViewCount(),
+                salePost.getStatus(),
+                items,
+                imageUrls,
+                salePost.getCreatedAt(),
+                salePost.getUpdatedAt()
+        );
+    }
+
+    public static SalePostResponse from(SalePost salePost, List<SalePostItemResponse> items, List<String> imageUrls, int viewCount) {
+        return new SalePostResponse(
+                salePost.getId(),
+                salePost.getUserId(),
+                salePost.getTitle(),
+                salePost.getDescription(),
+                salePost.getPrice(),
+                viewCount,
                 salePost.getStatus(),
                 items,
                 imageUrls,

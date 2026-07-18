@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SoftDelete;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,7 +15,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "sale_post")
+@SoftDelete
+@Table(name = "sale_post", indexes = {
+        @Index(name = "idx_card_id_status", columnList = "card_id, status")
+})
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -65,16 +69,18 @@ public class SalePost {
         this.viewCount = 0;
     }
 
-    public void update(String title, String description, int price, String imageObjectKey) {
+    public void update(String title, String description, Integer price, String imageObjectKey) {
         if (this.status == SaleStatus.RESERVED) {
             throw new ReservedPostException();
         }
-        this.title = title;
-        this.description = description;
-        this.price = price;
-        if (imageObjectKey != null) {
-            this.imageObjectKey = imageObjectKey;
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (price != null) {
+            if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+            this.price = price;
         }
+        if (imageObjectKey != null) this.imageObjectKey = imageObjectKey;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void validateDeletable() {
