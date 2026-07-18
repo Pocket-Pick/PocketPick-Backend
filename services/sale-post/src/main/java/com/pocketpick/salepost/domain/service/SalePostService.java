@@ -1,5 +1,6 @@
 package com.pocketpick.salepost.domain.service;
 
+import com.pocketpick.salepost.domain.domain.SalePostImage;
 import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
 import com.pocketpick.salepost.domain.dto.SalePostResponse;
 import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
@@ -13,10 +14,11 @@ import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +39,11 @@ public class SalePostService implements SalePostUseCase {
                 .price(request.price())
                 .cardCondition(request.cardCondition())
                 .build();
-        return toResponse(salePostRepository.save(salePost));
+        SalePost saved = salePostRepository.save(salePost);
+
+        saveImages(userId, saved.getId(), request.imageObjectKeys());
+
+        return toResponse(saved);
     }
 
     @Override
@@ -74,6 +80,10 @@ public class SalePostService implements SalePostUseCase {
         }
         salePost.update(request.title(), request.description(), request.price(),
                 request.cardCondition());
+
+        salePostImageRepository.deleteBySalePostId(id);
+        saveImages(userId, id, request.imageObjectKeys());
+
         return toResponse(salePost);
     }
 
@@ -85,7 +95,27 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
+        List<SalePostImage> images = salePostImageRepository.findBySalePostIdOrderBySortOrder(id);
+        images.forEach(image -> s3Uploader.deleteObject(image.getObjectKey()));
+        salePostImageRepository.deleteBySalePostId(id);
         salePostRepository.delete(salePost);
+    }
+
+    private void saveImages(Long userId, Long salePostId, List<String> tempObjectKeys) {
+        if (tempObjectKeys == null || tempObjectKeys.isEmpty()) {
+            return;
+        }
+        String expectedPrefix = "images/temp/" + userId + "/";
+        List<SalePostImage> images = new ArrayList<>();
+        for (int i = 0; i < tempObjectKeys.size(); i++) {
+            String tempObjectKey = tempObjectKeys.get(i);
+            if (tempObjectKey == null || !tempObjectKey.startsWith(expectedPrefix)) {
+                throw new ForbiddenException();
+            }
+            String postsKey = s3Uploader.promoteToPostsPath(tempObjectKey);
+            images.add(SalePostImage.of(salePostId, postsKey, i));
+        }
+        salePostImageRepository.saveAll(images);
     }
 
     private SalePostResponse toResponse(SalePost salePost) {
