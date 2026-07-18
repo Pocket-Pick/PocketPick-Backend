@@ -65,16 +65,18 @@ public class SalePost {
         this.viewCount = 0;
     }
 
-    public void update(String title, String description, int price, String imageObjectKey) {
+    public void update(String title, String description, Integer price, String imageObjectKey) {
         if (this.status == SaleStatus.RESERVED) {
             throw new ReservedPostException();
         }
-        this.title = title;
-        this.description = description;
-        this.price = price;
-        if (imageObjectKey != null) {
-            this.imageObjectKey = imageObjectKey;
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (price != null) {
+            if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+            this.price = price;
         }
+        if (imageObjectKey != null) this.imageObjectKey = imageObjectKey;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void validateDeletable() {

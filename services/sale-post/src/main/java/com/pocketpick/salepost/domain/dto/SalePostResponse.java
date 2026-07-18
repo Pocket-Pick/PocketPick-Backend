@@ -33,4 +33,19 @@ public record SalePostResponse(
                 salePost.getUpdatedAt()
         );
     }
+
+    public static SalePostResponse from(SalePost salePost, List<SalePostItemResponse> items, List<String> imageUrls, int viewCount) {
+        return new SalePostResponse(
+                salePost.getId(),
+                salePost.getUserId(),
+                salePost.getTitle(),
+                salePost.getDescription(),
+                viewCount,
+                salePost.getStatus(),
+                items,
+                imageUrls,
+                salePost.getCreatedAt(),
+                salePost.getUpdatedAt()
+        );
+    }
 }

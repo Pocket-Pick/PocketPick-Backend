@@ -2,14 +2,12 @@ package com.pocketpick.salepost.domain.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public record UpdateSalePostRequest(
-        @NotBlank
         @Size(max = 100)
         String title,
 
@@ -17,7 +15,7 @@ public record UpdateSalePostRequest(
         String description,
 
         @Min(0)
-        int price,
+        Integer price,
 
         @NotEmpty
         @Valid

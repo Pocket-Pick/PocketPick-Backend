@@ -80,7 +80,7 @@ public class SalePostService implements SalePostUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public SalePostResponse getSalePost(Long id) {
+    public SalePostResponse getOne(Long id) {
         SalePost salePost = salePostRepository.findById(id)
                 .orElseThrow(SalePostNotFoundException::new);
         viewCountRepository.increment(id);
@@ -95,7 +95,7 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
-        salePost.update(request.title(), request.description(), request.price(), request.imageObjectKey());
+        salePost.update(request.title(), request.description(), request.price(), null);
 
         salePostItemRepository.deleteBySalePostId(id);
         saveItems(id, request.items());
