@@ -9,6 +9,7 @@ import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +37,9 @@ class SalePostServiceTest {
     private SalePostRepository salePostRepository;
 
     @Mock
+    private SalePostImageRepository salePostImageRepository;
+
+    @Mock
     private S3Uploader s3Uploader;
 
     @InjectMocks
@@ -49,22 +54,22 @@ class SalePostServiceTest {
         void create_validRequest_returnsResponse() {
             // given
             CreateSalePostRequest request = new CreateSalePostRequest(
-                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT, "images/1/uuid.jpg"
+                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT, List.of("images/temp/1/uuid.jpg")
             );
             SalePost savedPost = SalePost.builder()
                     .userId(1L).cardId(1L).title("카드 팝니다")
                     .description("상태 좋아요").price(10000)
-                    .cardCondition(CardCondition.MINT).imageObjectKey("images/1/uuid.jpg")
+                    .cardCondition(CardCondition.MINT)
                     .build();
             given(salePostRepository.save(any(SalePost.class))).willReturn(savedPost);
-            given(s3Uploader.buildImageUrl("images/1/uuid.jpg")).willReturn("https://bucket.s3.amazonaws.com/images/1/uuid.jpg");
+            given(salePostImageRepository.findBySalePostIdOrderBySortOrder(savedPost.getId())).willReturn(List.of());
 
             // when
             SalePostResponse response = salePostService.create(1L, request);
 
             // then
             assertThat(response.title()).isEqualTo("카드 팝니다");
-            assertThat(response.imageUrl()).isEqualTo("https://bucket.s3.amazonaws.com/images/1/uuid.jpg");
+            assertThat(response.imageUrls()).isEmpty();
         }
     }
 
@@ -114,6 +119,7 @@ class SalePostServiceTest {
                     .userId(1L).cardId(1L).title("제목").description("설명")
                     .price(5000).cardCondition(CardCondition.GOOD).build();
             given(salePostRepository.findById(1L)).willReturn(Optional.of(salePost));
+            given(salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())).willReturn(List.of());
 
             UpdateSalePostRequest request = new UpdateSalePostRequest(
                     "수정 제목", "수정 설명", 8000, CardCondition.MINT, null

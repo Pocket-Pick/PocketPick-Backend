@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record CreateSalePostRequest(
         @NotNull
         Long cardId,
@@ -22,6 +24,6 @@ public record CreateSalePostRequest(
         @NotNull
         CardCondition cardCondition,
 
-        String imageObjectKey
+        List<String> imageObjectKeys
 ) {
 }

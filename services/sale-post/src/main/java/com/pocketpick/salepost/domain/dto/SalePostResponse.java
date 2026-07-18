@@ -5,6 +5,7 @@ import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record SalePostResponse(
         Long id,
@@ -15,12 +16,12 @@ public record SalePostResponse(
         int price,
         CardCondition cardCondition,
         SaleStatus status,
-        String imageUrl,
+        List<String> imageUrls,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
 
-    public static SalePostResponse from(SalePost salePost, String imageUrl) {
+    public static SalePostResponse from(SalePost salePost, List<String> imageUrls) {
         return new SalePostResponse(
                 salePost.getId(),
                 salePost.getUserId(),
@@ -30,7 +31,7 @@ public record SalePostResponse(
                 salePost.getPrice(),
                 salePost.getCardCondition(),
                 salePost.getStatus(),
-                imageUrl,
+                imageUrls,
                 salePost.getCreatedAt(),
                 salePost.getUpdatedAt()
         );

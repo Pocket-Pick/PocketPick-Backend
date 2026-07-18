@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -59,7 +60,7 @@ class SalePostControllerTest {
         return new SalePostResponse(
                 1L, 1L, 1L, "카드 팝니다", "상태 좋아요",
                 10000, CardCondition.MINT, SaleStatus.ON_SALE,
-                "https://bucket.s3.amazonaws.com/images/1/uuid.jpg",
+                List.of("https://bucket.s3.amazonaws.com/images/posts/1/uuid.jpg"),
                 LocalDateTime.now(), LocalDateTime.now()
         );
     }
@@ -73,7 +74,7 @@ class SalePostControllerTest {
         void create_validRequest_returns201() throws Exception {
             // given
             CreateSalePostRequest request = new CreateSalePostRequest(
-                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT, "images/1/uuid.jpg"
+                    1L, "카드 팝니다", "상태 좋아요", 10000, CardCondition.MINT, List.of("images/temp/1/uuid.jpg")
             );
             given(salePostUseCase.create(eq(1L), any())).willReturn(sampleResponse());
 
@@ -92,7 +93,7 @@ class SalePostControllerTest {
         void create_missingTitle_returns400() throws Exception {
             // given
             CreateSalePostRequest request = new CreateSalePostRequest(
-                    1L, "", "설명", 10000, CardCondition.MINT, null
+                    1L, "", "설명", 10000, CardCondition.MINT, List.of()
             );
 
             // when & then

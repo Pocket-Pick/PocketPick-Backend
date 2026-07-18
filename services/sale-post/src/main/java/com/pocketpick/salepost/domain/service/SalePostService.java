@@ -7,11 +7,14 @@ import com.pocketpick.salepost.domain.domain.SalePost;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SalePostService implements SalePostUseCase {
 
     private final SalePostRepository salePostRepository;
+    private final SalePostImageRepository salePostImageRepository;
     private final S3Uploader s3Uploader;
 
     @Override
@@ -32,7 +36,6 @@ public class SalePostService implements SalePostUseCase {
                 .description(request.description())
                 .price(request.price())
                 .cardCondition(request.cardCondition())
-                .imageObjectKey(request.imageObjectKey())
                 .build();
         return toResponse(salePostRepository.save(salePost));
     }
@@ -50,7 +53,7 @@ public class SalePostService implements SalePostUseCase {
         } else {
             posts = salePostRepository.findAll(pageable);
         }
-        return posts.map(this::toResponse);
+        return posts.map(post -> toResponse(post));
     }
 
     @Override
@@ -70,7 +73,7 @@ public class SalePostService implements SalePostUseCase {
             throw new ForbiddenException();
         }
         salePost.update(request.title(), request.description(), request.price(),
-                request.cardCondition(), request.imageObjectKey());
+                request.cardCondition());
         return toResponse(salePost);
     }
 
@@ -86,9 +89,10 @@ public class SalePostService implements SalePostUseCase {
     }
 
     private SalePostResponse toResponse(SalePost salePost) {
-        String imageUrl = salePost.getImageObjectKey() != null
-                ? s3Uploader.buildImageUrl(salePost.getImageObjectKey())
-                : null;
-        return SalePostResponse.from(salePost, imageUrl);
+        List<String> imageUrls = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())
+                .stream()
+                .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
+                .toList();
+        return SalePostResponse.from(salePost, imageUrls);
     }
 }
