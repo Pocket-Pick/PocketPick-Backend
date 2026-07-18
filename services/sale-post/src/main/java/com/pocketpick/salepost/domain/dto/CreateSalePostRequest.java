@@ -1,6 +1,6 @@
-package com.pocketpick.salepost.application.dto;
+package com.pocketpick.salepost.domain.dto;
 
-import com.pocketpick.salepost.domain.entity.CardCondition;
+import com.pocketpick.salepost.domain.domain.CardCondition;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

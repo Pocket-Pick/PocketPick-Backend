@@ -1,8 +1,8 @@
-package com.pocketpick.salepost.application.dto;
+package com.pocketpick.salepost.domain.dto;
 
-import com.pocketpick.salepost.domain.entity.CardCondition;
-import com.pocketpick.salepost.domain.entity.SalePost;
-import com.pocketpick.salepost.domain.entity.SaleStatus;
+import com.pocketpick.salepost.domain.domain.CardCondition;
+import com.pocketpick.salepost.domain.domain.SalePost;
+import com.pocketpick.salepost.domain.domain.SaleStatus;
 
 import java.time.LocalDateTime;
 

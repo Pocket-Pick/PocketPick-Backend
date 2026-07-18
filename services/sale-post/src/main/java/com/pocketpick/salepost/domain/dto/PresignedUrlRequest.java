@@ -1,4 +1,4 @@
-package com.pocketpick.salepost.application.dto;
+package com.pocketpick.salepost.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

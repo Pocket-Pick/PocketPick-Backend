@@ -1,4 +1,4 @@
-package com.pocketpick.salepost.domain.exception;
+package com.pocketpick.salepost.domain.domain.exception;
 
 import com.pocketpick.salepost.global.exception.BusinessException;
 import org.springframework.http.HttpStatus;

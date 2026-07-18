@@ -1,4 +1,4 @@
-package com.pocketpick.salepost.domain.entity;
+package com.pocketpick.salepost.domain.domain;
 
 public enum CardCondition {
     MINT,
