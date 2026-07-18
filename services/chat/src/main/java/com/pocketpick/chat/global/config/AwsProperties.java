@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "cloud.aws")
@@ -24,5 +26,6 @@ public class AwsProperties {
     @Setter
     public static class S3 {
         private String bucket;
+        private Duration presignedUrlExpiration;
     }
 }

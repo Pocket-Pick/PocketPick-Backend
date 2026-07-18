@@ -8,14 +8,12 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.time.Duration;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class S3Uploader {
 
-    private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofMinutes(10);
     private static final String CHAT_PREFIX = "images/chat/";
 
     private final S3Presigner s3Presigner;
@@ -32,7 +30,7 @@ public class S3Uploader {
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(PRESIGNED_URL_EXPIRATION)
+                .signatureDuration(awsProperties.getS3().getPresignedUrlExpiration())
                 .putObjectRequest(putObjectRequest)
                 .build();
 
