@@ -42,17 +42,16 @@ public class SalePostController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<SalePostResponse>> getSalePostList(
-            @RequestParam(required = false) Long cardId,
+    public ResponseEntity<Page<SalePostResponse>> getList(
             @RequestParam(required = false) SaleStatus status,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(salePostUseCase.getSalePostList(cardId, status, pageable));
+        return ResponseEntity.ok(salePostUseCase.getList(status, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SalePostResponse> getSalePost(@PathVariable Long id) {
-        return ResponseEntity.ok(salePostUseCase.getSalePost(id));
+    public ResponseEntity<SalePostResponse> getOne(@PathVariable Long id) {
+        return ResponseEntity.ok(salePostUseCase.getOne(id));
     }
 
     @PatchMapping("/{id}")

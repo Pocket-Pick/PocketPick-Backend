@@ -1,16 +1,20 @@
 package com.pocketpick.salepost.domain.service;
 
-import com.pocketpick.salepost.domain.domain.SalePostImage;
-import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
-import com.pocketpick.salepost.domain.dto.SalePostResponse;
-import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
-import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.domain.domain.SalePost;
+import com.pocketpick.salepost.domain.domain.SalePostImage;
+import com.pocketpick.salepost.domain.domain.SalePostItem;
 import com.pocketpick.salepost.domain.domain.SaleStatus;
 import com.pocketpick.salepost.domain.domain.exception.ForbiddenException;
 import com.pocketpick.salepost.domain.domain.exception.SalePostNotFoundException;
+import com.pocketpick.salepost.domain.dto.CreateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.SalePostItemRequest;
+import com.pocketpick.salepost.domain.dto.SalePostItemResponse;
+import com.pocketpick.salepost.domain.dto.SalePostResponse;
+import com.pocketpick.salepost.domain.dto.UpdateSalePostRequest;
+import com.pocketpick.salepost.domain.dto.UpdateSaleStatusRequest;
 import com.pocketpick.salepost.infrastructure.redis.ViewCountRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostImageRepository;
+import com.pocketpick.salepost.infrastructure.repository.SalePostItemRepository;
 import com.pocketpick.salepost.infrastructure.repository.SalePostRepository;
 import com.pocketpick.salepost.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,7 @@ public class SalePostService implements SalePostUseCase {
 
     private final SalePostRepository salePostRepository;
     private final SalePostImageRepository salePostImageRepository;
+    private final SalePostItemRepository salePostItemRepository;
     private final ViewCountRepository viewCountRepository;
     private final S3Uploader s3Uploader;
 
@@ -38,14 +46,13 @@ public class SalePostService implements SalePostUseCase {
     public SalePostResponse create(Long userId, CreateSalePostRequest request) {
         SalePost salePost = SalePost.builder()
                 .userId(userId)
-                .cardId(request.cardId())
                 .title(request.title())
                 .description(request.description())
                 .price(request.price())
-                .cardCondition(request.cardCondition())
                 .build();
         SalePost saved = salePostRepository.save(salePost);
 
+        saveItems(saved.getId(), request.items());
         saveImages(userId, saved.getId(), request.imageObjectKeys());
 
         return toResponse(saved);
@@ -53,18 +60,22 @@ public class SalePostService implements SalePostUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SalePostResponse> getSalePostList(Long cardId, SaleStatus status, Pageable pageable) {
-        Page<SalePost> posts;
-        if (cardId != null && status != null) {
-            posts = salePostRepository.findByCardIdAndStatus(cardId, status, pageable);
-        } else if (cardId != null) {
-            posts = salePostRepository.findByCardId(cardId, pageable);
-        } else if (status != null) {
-            posts = salePostRepository.findByStatus(status, pageable);
-        } else {
-            posts = salePostRepository.findAll(pageable);
-        }
-        return posts.map(post -> toResponse(post));
+    public Page<SalePostResponse> getList(SaleStatus status, Pageable pageable) {
+        Page<SalePost> posts = status != null
+                ? salePostRepository.findByStatus(status, pageable)
+                : salePostRepository.findAll(pageable);
+
+        List<Long> postIds = posts.map(SalePost::getId).toList();
+
+        Map<Long, List<SalePostItem>> itemMap = salePostItemRepository
+                .findBySalePostIdIn(postIds).stream()
+                .collect(groupingBy(SalePostItem::getSalePostId));
+
+        Map<Long, List<SalePostImage>> imageMap = salePostImageRepository
+                .findBySalePostIdInOrderBySortOrder(postIds).stream()
+                .collect(groupingBy(SalePostImage::getSalePostId));
+
+        return posts.map(post -> toResponse(post, itemMap, imageMap));
     }
 
     @Override
@@ -84,8 +95,10 @@ public class SalePostService implements SalePostUseCase {
         if (!salePost.isOwner(userId)) {
             throw new ForbiddenException();
         }
-        salePost.update(request.title(), request.description(), request.price(),
-                request.cardCondition());
+        salePost.update(request.title(), request.description(), request.price(), request.imageObjectKey());
+
+        salePostItemRepository.deleteBySalePostId(id);
+        saveItems(id, request.items());
 
         salePostImageRepository.deleteBySalePostId(id);
         saveImages(userId, id, request.imageObjectKeys());
@@ -119,6 +132,7 @@ public class SalePostService implements SalePostUseCase {
             throw new ForbiddenException();
         }
         salePost.validateDeletable();
+        salePostItemRepository.deleteBySalePostId(id);
         deleteImages(id);
         salePostRepository.delete(salePost);
     }
@@ -127,6 +141,16 @@ public class SalePostService implements SalePostUseCase {
     @Transactional
     public void applyViewCount(Long salePostId, int delta) {
         salePostRepository.incrementViewCount(salePostId, delta);
+    }
+
+    private void saveItems(Long salePostId, List<SalePostItemRequest> itemRequests) {
+        if (itemRequests == null || itemRequests.isEmpty()) {
+            return;
+        }
+        List<SalePostItem> items = itemRequests.stream()
+                .map(req -> SalePostItem.of(salePostId, req.cardId(), req.cardCondition(), req.quantity()))
+                .toList();
+        salePostItemRepository.saveAll(items);
     }
 
     private void deleteImages(Long salePostId) {
@@ -159,19 +183,41 @@ public class SalePostService implements SalePostUseCase {
     }
 
     private SalePostResponse toResponse(SalePost salePost) {
+        List<SalePostItemResponse> items = salePostItemRepository.findBySalePostId(salePost.getId())
+                .stream()
+                .map(SalePostItemResponse::from)
+                .toList();
         List<String> imageUrls = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())
                 .stream()
                 .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
                 .toList();
-        return SalePostResponse.from(salePost, imageUrls, salePost.getViewCount());
+        return SalePostResponse.from(salePost, items, imageUrls, salePost.getViewCount());
     }
 
     private SalePostResponse toResponseWithViewCount(SalePost salePost, Long salePostId) {
+        List<SalePostItemResponse> items = salePostItemRepository.findBySalePostId(salePost.getId())
+                .stream()
+                .map(SalePostItemResponse::from)
+                .toList();
         List<String> imageUrls = salePostImageRepository.findBySalePostIdOrderBySortOrder(salePost.getId())
                 .stream()
                 .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
                 .toList();
         int viewCount = (int) (salePost.getViewCount() + viewCountRepository.get(salePostId));
-        return SalePostResponse.from(salePost, imageUrls, viewCount);
+        return SalePostResponse.from(salePost, items, imageUrls, viewCount);
+    }
+
+    private SalePostResponse toResponse(SalePost salePost,
+            Map<Long, List<SalePostItem>> itemMap,
+            Map<Long, List<SalePostImage>> imageMap) {
+        List<SalePostItemResponse> items = itemMap.getOrDefault(salePost.getId(), List.of())
+                .stream()
+                .map(SalePostItemResponse::from)
+                .toList();
+        List<String> imageUrls = imageMap.getOrDefault(salePost.getId(), List.of())
+                .stream()
+                .map(image -> s3Uploader.buildImageUrl(image.getObjectKey()))
+                .toList();
+        return SalePostResponse.from(salePost, items, imageUrls);
     }
 }

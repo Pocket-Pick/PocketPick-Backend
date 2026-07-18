@@ -27,9 +27,6 @@ public class SalePost {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
-    private Long cardId;
-
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -38,10 +35,6 @@ public class SalePost {
 
     @Column(nullable = false)
     private int price;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private CardCondition cardCondition;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -62,30 +55,23 @@ public class SalePost {
     private LocalDateTime updatedAt;
 
     @Builder
-    private SalePost(Long userId, Long cardId, String title, String description,
-                     int price, CardCondition cardCondition, String imageObjectKey) {
-        if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+    private SalePost(Long userId, String title, String description, int price, String imageObjectKey) {
         this.userId = userId;
-        this.cardId = cardId;
         this.title = title;
         this.description = description;
         this.price = price;
-        this.cardCondition = cardCondition;
         this.imageObjectKey = imageObjectKey;
         this.status = SaleStatus.ON_SALE;
         this.viewCount = 0;
     }
 
-    public void update(String title, String description, int price,
-                       CardCondition cardCondition, String imageObjectKey) {
+    public void update(String title, String description, int price, String imageObjectKey) {
         if (this.status == SaleStatus.RESERVED) {
             throw new ReservedPostException();
         }
-        if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
         this.title = title;
         this.description = description;
         this.price = price;
-        this.cardCondition = cardCondition;
         if (imageObjectKey != null) {
             this.imageObjectKey = imageObjectKey;
         }

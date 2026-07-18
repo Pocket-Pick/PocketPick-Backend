@@ -1,9 +1,9 @@
 package com.pocketpick.salepost.domain.dto;
 
-import com.pocketpick.salepost.domain.domain.CardCondition;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -18,8 +18,9 @@ public record UpdateSalePostRequest(
         @Min(0)
         int price,
 
-        @NotNull
-        CardCondition cardCondition,
+        @NotEmpty
+        @Valid
+        List<SalePostItemRequest> items,
 
         List<String> imageObjectKeys
 ) {
