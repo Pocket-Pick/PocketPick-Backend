@@ -3,6 +3,7 @@ package com.pocketpick.user.service;
 import com.pocketpick.user.domain.service.UserService;
 import com.pocketpick.user.domain.domain.exception.InvalidNicknameException;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
+import com.pocketpick.user.domain.dto.RegisterFcmTokenRequest;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
@@ -10,6 +11,7 @@ import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
+import com.pocketpick.user.infrastructure.redis.FcmTokenRedisRepository;
 import com.pocketpick.user.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,8 +27,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @DisplayName("UserService")
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +47,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private FcmTokenRedisRepository fcmTokenRedisRepository;
 
     @InjectMocks
     private UserService userService;
@@ -190,6 +197,37 @@ class UserServiceTest {
 
             // when & then
             assertThatThrownBy(() -> userService.updateNotification(UserFixture.ID, request))
+                    .isInstanceOf(UserNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("FCM 토큰 등록")
+    class RegisterFcmToken {
+
+        @Test
+        @DisplayName("정상 요청이면 DB 저장 및 Redis write-through가 수행된다")
+        void registerFcmToken_validRequest_savesToDbAndRedis() {
+            // given
+            RegisterFcmTokenRequest request = new RegisterFcmTokenRequest("fcm-token-abc");
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.of(UserFixture.user()));
+
+            // when
+            userService.registerFcmToken(UserFixture.ID, request);
+
+            // then
+            verify(fcmTokenRedisRepository).save(UserFixture.ID, "fcm-token-abc");
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 id면 UserNotFoundException을 던진다")
+        void registerFcmToken_notExistingId_throwsUserNotFoundException() {
+            // given
+            RegisterFcmTokenRequest request = new RegisterFcmTokenRequest("fcm-token-abc");
+            given(userRepository.findById(UserFixture.ID)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> userService.registerFcmToken(UserFixture.ID, request))
                     .isInstanceOf(UserNotFoundException.class);
         }
     }

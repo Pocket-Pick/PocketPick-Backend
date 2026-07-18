@@ -22,6 +22,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private boolean notificationEnabled = true;
 
+    @Column
+    private String fcmToken;
+
     public static User create(UserProfile profile) {
         User user = new User();
         user.profile = profile;
@@ -34,5 +37,9 @@ public class User extends BaseEntity {
 
     public void updateNotification(boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

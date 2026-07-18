@@ -1,5 +1,6 @@
 package com.pocketpick.user.domain.service;
 
+import com.pocketpick.user.domain.dto.RegisterFcmTokenRequest;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
@@ -10,4 +11,5 @@ public interface UserUseCase {
     UserResponse getUser(Long userId);
     UserResponse updateProfile(Long userId, UpdateProfileRequest request);
     UserResponse updateNotification(Long userId, UpdateNotificationRequest request);
+    void registerFcmToken(Long userId, RegisterFcmTokenRequest request);
 }

@@ -4,14 +4,17 @@ import com.pocketpick.user.domain.domain.OutboxEvent;
 import com.pocketpick.user.domain.domain.User;
 import com.pocketpick.user.domain.domain.UserProfile;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
+import com.pocketpick.user.domain.dto.RegisterFcmTokenRequest;
 import com.pocketpick.user.domain.dto.RegisterRequest;
 import com.pocketpick.user.domain.dto.UpdateNotificationRequest;
 import com.pocketpick.user.domain.dto.UpdateProfileRequest;
 import com.pocketpick.user.domain.dto.UserResponse;
 import com.pocketpick.user.domain.repository.OutboxEventRepository;
+import com.pocketpick.user.domain.event.FcmTokenRegisteredEvent;
 import com.pocketpick.user.domain.repository.UserRepository;
 import com.pocketpick.user.infrastructure.auth.AuthServiceClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,7 @@ public class UserService implements UserUseCase {
     private final OutboxEventRepository outboxEventRepository;
     private final AuthServiceClient authServiceClient;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -67,5 +71,14 @@ public class UserService implements UserUseCase {
                 .orElseThrow(UserNotFoundException::new);
         user.updateNotification(request.notificationEnabled());
         return UserResponse.from(user);
+    }
+
+    @Override
+    @Transactional
+    public void registerFcmToken(Long userId, RegisterFcmTokenRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        user.updateFcmToken(request.fcmToken());
+        eventPublisher.publishEvent(new FcmTokenRegisteredEvent(userId, request.fcmToken()));
     }
 }
