@@ -1,10 +1,11 @@
 package com.pocketpick.auth.domain.domain.exception;
 
 import com.pocketpick.auth.global.exception.BusinessException;
-import org.springframework.http.HttpStatus;
+import com.pocketpick.auth.global.exception.ErrorCode;
 
-public class AccountException extends BusinessException {
-    protected AccountException(String errorCode, String message, HttpStatus httpStatus) {
-        super(errorCode, message, httpStatus);
+public abstract class AccountException extends BusinessException {
+
+    protected AccountException(ErrorCode errorCode) {
+        super(errorCode);
     }
 }

@@ -87,7 +87,7 @@ class CardSearchControllerTest {
             // when & then
             mockMvc.perform(get("/cards").param("type", "INVALID_TYPE"))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
         }
 
         @Test

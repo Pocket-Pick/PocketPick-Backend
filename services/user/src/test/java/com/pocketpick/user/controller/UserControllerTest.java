@@ -1,6 +1,6 @@
 package com.pocketpick.user.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.pocketpick.user.domain.controller.UserController;
 import com.pocketpick.user.domain.domain.exception.UserNotFoundException;
 import com.pocketpick.user.domain.dto.RegisterRequest;
@@ -83,7 +83,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidBody))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
         }
     }
 
@@ -150,7 +150,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidBody))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
         }
 
         @Test
@@ -200,7 +200,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidBody))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT_VALUE"));
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
         }
 
         @Test
