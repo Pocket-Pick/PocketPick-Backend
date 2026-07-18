@@ -3,6 +3,7 @@ package com.pocketpick.chat.application;
 import com.pocketpick.chat.domain.message.dto.ChatMessageEvent;
 import com.pocketpick.chat.domain.message.dto.ChatMessageResponse;
 import com.pocketpick.chat.global.config.ChatServerProperties;
+import com.pocketpick.chat.infrastructure.fcm.FcmPushRequest;
 import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
@@ -31,7 +32,7 @@ public class MessageDeliveryService {
         Long receiverId = event.getReceiverId();
 
         if (!onlineStatusRepository.isOnline(receiverId)) {
-            fcmPushService.sendPush(receiverId, event.getContent());
+            fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
             return;
         }
 
@@ -51,7 +52,7 @@ public class MessageDeliveryService {
             } catch (IOException e) {
                 log.error("WebSocket push failed, fallback to FCM: receiverId={}", receiverId, e);
                 onlineStatusRepository.markOffline(receiverId);
-                fcmPushService.sendPush(receiverId, event.getContent());
+                fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
             }
         });
     }
@@ -59,7 +60,7 @@ public class MessageDeliveryService {
     private void forwardToTargetServer(Long receiverId, ChatMessageEvent event) {
         String targetIp = onlineStatusRepository.getServerIp(receiverId);
         if (targetIp == null) {
-            fcmPushService.sendPush(receiverId, event.getContent());
+            fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
             return;
         }
 
@@ -71,7 +72,7 @@ public class MessageDeliveryService {
                     .toBodilessEntity();
         } catch (Exception e) {
             log.error("Forward to target server failed: receiverId={}, targetIp={}", receiverId, targetIp, e);
-            fcmPushService.sendPush(receiverId, event.getContent());
+            fcmPushService.sendPush(new FcmPushRequest(receiverId, event.getRoomId(), event.getSenderId(), event.getContent()));
         }
     }
 }

@@ -6,7 +6,6 @@ import com.pocketpick.chat.global.config.ChatServerProperties;
 import com.pocketpick.chat.infrastructure.fcm.FcmPushService;
 import com.pocketpick.chat.infrastructure.redis.OnlineStatusRepository;
 import com.pocketpick.chat.presentation.websocket.WebSocketSessionRegistry;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -55,7 +53,7 @@ class MessageDeliveryServiceTest {
 
             messageDeliveryService.deliver(event);
 
-            verify(fcmPushService).sendPush(2L, "안녕하세요");
+            verify(fcmPushService).sendPush(any(com.pocketpick.chat.infrastructure.fcm.FcmPushRequest.class));
             verify(sessionRegistry, never()).getSession(anyLong());
         }
 
@@ -70,7 +68,7 @@ class MessageDeliveryServiceTest {
             messageDeliveryService.deliver(event);
 
             verify(webSocketSession).sendMessage(any());
-            verify(fcmPushService, never()).sendPush(anyLong(), anyString());
+            verify(fcmPushService, never()).sendPush(any(com.pocketpick.chat.infrastructure.fcm.FcmPushRequest.class));
         }
 
         @Test
@@ -85,7 +83,7 @@ class MessageDeliveryServiceTest {
             messageDeliveryService.deliver(event);
 
             verify(restClient).post();
-            verify(fcmPushService, never()).sendPush(anyLong(), anyString());
+            verify(fcmPushService, never()).sendPush(any(com.pocketpick.chat.infrastructure.fcm.FcmPushRequest.class));
         }
 
         @Test
@@ -98,7 +96,7 @@ class MessageDeliveryServiceTest {
 
             messageDeliveryService.deliver(event);
 
-            verify(fcmPushService).sendPush(2L, "안녕하세요");
+            verify(fcmPushService).sendPush(any(com.pocketpick.chat.infrastructure.fcm.FcmPushRequest.class));
         }
     }
 

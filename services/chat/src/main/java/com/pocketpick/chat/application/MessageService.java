@@ -10,10 +10,14 @@ import com.pocketpick.chat.domain.room.ChatRoomRepository;
 import com.pocketpick.chat.infrastructure.kafka.ChatMessageProducer;
 import com.pocketpick.chat.infrastructure.websocket.WebSocketMessageSender;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class MessageService implements MessageUseCase {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageProducer chatMessageProducer;
     private final WebSocketMessageSender webSocketMessageSender;
+    private final MongoTemplate mongoTemplate;
 
     @Transactional
     public void send(Long senderId, WebSocketFrame frame) {
@@ -50,20 +55,17 @@ public class MessageService implements MessageUseCase {
         chatMessageProducer.send(event);
     }
 
-    @Transactional
     public void markAsRead(String roomId, Long readerId) {
-        List<ChatMessage> unread = chatMessageRepository
-                .findByRoomIdAndSenderIdNotAndReadAtIsNull(roomId, readerId);
+        chatMessageRepository.findTop1ByRoomIdAndSenderIdNotAndReadAtIsNull(roomId, readerId)
+                .ifPresent(message -> {
+                    Query query = Query.query(Criteria.where("roomId").is(roomId)
+                            .and("senderId").ne(readerId)
+                            .and("readAt").isNull());
+                    Update update = Update.update("readAt", LocalDateTime.now());
+                    mongoTemplate.updateMulti(query, update, "messages");
 
-        if (unread.isEmpty()) {
-            return;
-        }
-
-        unread.forEach(ChatMessage::markAsRead);
-        chatMessageRepository.saveAll(unread);
-
-        Long senderId = unread.get(0).getSenderId();
-        webSocketMessageSender.sendReadEvent(senderId, new ReadEvent(roomId, readerId));
+                    webSocketMessageSender.sendReadEvent(message.getSenderId(), new ReadEvent(roomId, readerId));
+                });
     }
 
     private void updateLastMessage(String roomId, String content) {
