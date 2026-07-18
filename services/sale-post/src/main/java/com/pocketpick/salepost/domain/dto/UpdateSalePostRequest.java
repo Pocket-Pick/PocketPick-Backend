@@ -13,6 +13,7 @@ public record UpdateSalePostRequest(
         @Size(max = 100)
         String title,
 
+        @Size(max = 2000)
         String description,
 
         @Min(0)
