@@ -73,13 +73,21 @@ public class SalePost {
         if (this.status == SaleStatus.RESERVED) {
             throw new ReservedPostException();
         }
-        if (title != null) this.title = title;
-        if (description != null) this.description = description;
+        if (title != null) {
+            this.title = title;
+        }
+        if (description != null) {
+            this.description = description;
+        }
         if (price != null) {
-            if (price < 0) throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+            if (price < 0) {
+                throw new IllegalArgumentException("price는 0 이상이어야 합니다.");
+            }
             this.price = price;
         }
-        if (imageObjectKey != null) this.imageObjectKey = imageObjectKey;
+        if (imageObjectKey != null) {
+            this.imageObjectKey = imageObjectKey;
+        }
         this.updatedAt = LocalDateTime.now();
     }
 
