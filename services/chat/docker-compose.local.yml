@@ -1,0 +1,27 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: pocketpick-chat-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - pocketpick-chat-mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chat-service:
+    build: .
+    container_name: pocketpick-chat-service
+    ports:
+      - "8085:8085"
+    env_file:
+      - .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  pocketpick-chat-mongodb-data:
