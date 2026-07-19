@@ -73,7 +73,9 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
     }
 
     private BooleanExpression typeEq(PokemonType type) {
-        if (type == null) return null;
+        if (type == null) {
+            return null;
+        }
         QCardType cardType = QCardType.cardType;
         return QCard.card.id.in(
                 JPAExpressions.select(cardType.cardId)
