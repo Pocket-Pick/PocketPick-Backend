@@ -34,7 +34,7 @@ cloud:
       presigned-url-expiration: PT5M
 
 server:
-  port: ${SERVER_PORT:8084}
+  port: ${SERVER_PORT:8085}
 
 chat:
   server:
