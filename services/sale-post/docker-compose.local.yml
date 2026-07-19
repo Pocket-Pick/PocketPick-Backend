@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pocketpick-sale-post-mysql
+    ports:
+      - "3309:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: pocketpick_sale_post
+    volumes:
+      - pocketpick-sale-post-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sale-post-service:
+    build: .
+    container_name: pocketpick-sale-post-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/pocketpick_sale_post
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  pocketpick-sale-post-mysql-data:
