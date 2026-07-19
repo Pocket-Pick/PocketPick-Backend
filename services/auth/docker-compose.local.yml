@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pocketpick-auth-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: pocketpick_auth
+    volumes:
+      - pocketpick-auth-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: .
+    container_name: pocketpick-auth-service
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/pocketpick_auth
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  pocketpick-auth-mysql-data:
